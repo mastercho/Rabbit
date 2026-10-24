@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import mimetypes
 import os
 from pathlib import Path
 
@@ -14,6 +15,13 @@ from cairn.server.report_agent_service import start_report_agent, stop_report_ag
 from cairn.server.routers import export, findings, goals, hints, intents, projects, settings, steps
 
 STATIC_DIR = Path(__file__).parent / "static"
+
+# Windows registry often maps .js to text/plain. Browsers then refuse the
+# module script and the UI stays a blank page. Override after mimetypes.init().
+mimetypes.init()
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("image/svg+xml", ".svg")
 API_DOCS_ENABLED = os.environ.get("CAIRN_ENABLE_API_DOCS", "").strip().lower() in {"1", "true", "yes", "on"}
 _protected = [Depends(require_auth)]
 

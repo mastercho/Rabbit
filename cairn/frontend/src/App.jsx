@@ -239,7 +239,12 @@ export default function App() {
   }
 
   if (!user) {
-    return <AuthPage onAuthed={loadUser} setToast={setToast} />;
+    return (
+      <>
+        <AuthPage onAuthed={loadUser} setToast={setToast} />
+        {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
+      </>
+    );
   }
 
   return (
@@ -895,7 +900,7 @@ function AuthPage({ onAuthed, setToast }) {
             <h2>
               Continuous security exploration
               <br />
-              Leave attacks<span>nowhere to hide</span>
+              Leave attacks <span>nowhere to hide</span>
             </h2>
             <p>Rabbit helps security teams automate asset discovery, vulnerability verification, and attack-surface management.</p>
           </div>
@@ -933,7 +938,13 @@ function AuthPage({ onAuthed, setToast }) {
               </button>
               <button
                 type="button"
-                onClick={() => setToast({ type: "info", message: "Phone sign-in is not available. Use an account instead." })}
+                onClick={() =>
+                  setAuthMessage({
+                    type: "warning",
+                    title: "Phone sign-in is not available",
+                    body: "Use an account instead.",
+                  })
+                }
               >
                 Phone
               </button>
