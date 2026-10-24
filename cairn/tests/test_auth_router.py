@@ -182,7 +182,7 @@ def test_register_requires_valid_captcha(client):
         json={"username": "bob", "password": VALID_PASSWORD},
     )
     assert response.status_code == 400
-    assert "验证码" in response.json()["detail"]
+    assert "captcha" in response.json()["detail"].lower()
 
 
 # ---------------------------------------------------------------------------

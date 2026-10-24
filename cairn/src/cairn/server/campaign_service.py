@@ -290,7 +290,7 @@ def _top_findings(
             CampaignFinding(
                 source_type="hint",
                 source_id=hint_id,
-                title="最近 Hint",
+                title="Latest hint",
                 summary=_first_line(hint_text),
                 confidence="tentative",
             )
@@ -334,19 +334,19 @@ def _lead(
     open_steps: list[str],
 ) -> str:
     if goal_status == "achieved":
-        return f"{project_name} 已具备足以证明目标达成的结果。"
+        return f"{project_name} has results that are strong enough to show the goal was achieved."
     if vulnerabilities:
         head = vulnerabilities[0]
-        severity = {"critical": "严重", "high": "高危", "medium": "中危", "low": "低危"}.get(
+        severity = {"critical": "critical", "high": "high", "medium": "medium", "low": "low"}.get(
             head.severity,
             head.severity,
         )
-        return f"当前主线已收敛到 {severity} 发现：{head.title}"
+        return f"The campaign has converged on a {severity} finding: {head.title}"
     if top_findings:
-        return f"当前最强信号来自 {top_findings[0].source_id}：{top_findings[0].title}"
+        return f"The strongest signal is {top_findings[0].source_id}: {top_findings[0].title}"
     if open_steps:
-        return f"当前仍以 {open_steps[0]} 作为主要推进步骤。"
-    return f"{project_name} 当前缺少足够强的项目级信号。"
+        return f"The main open step is still {open_steps[0]}."
+    return f"{project_name} does not yet have a strong project-level signal."
 
 
 def _summary(
@@ -358,14 +358,14 @@ def _summary(
     blockers: list[str],
 ) -> str:
     parts = [
-        f"项目 {project_name} 当前状态为 {project_status}，目标判定为 {goal_status}。",
+        f"Project {project_name} is {project_status}. Goal status: {goal_status}.",
         lead,
-        f"已累计 {counts.facts} 条事实、{counts.goals} 个目标、{counts.open_steps} 个开放步骤、{counts.vulnerabilities} 条发现记录，其中高价值发现 {counts.high_value_vulnerabilities} 条。",
+        f"So far: {counts.facts} facts, {counts.goals} goals, {counts.open_steps} open steps, {counts.vulnerabilities} findings, including {counts.high_value_vulnerabilities} high-value findings.",
     ]
     if project_status == "completed" and goal_status != "achieved":
-        parts.append("项目状态虽然已标记为 completed，但当前事实中仍缺少足以直接证明目标达成的正向成功信号。")
+        parts.append("The project is marked completed, but the facts still lack a direct success signal that the goal was achieved.")
     if blockers:
-        parts.append(f"最近主要阻塞点：{blockers[0]}")
+        parts.append(f"Latest blocker: {blockers[0]}")
     return " ".join(parts)
 
 
@@ -378,25 +378,25 @@ def _next_steps(
 ) -> list[str]:
     if goal_status == "achieved":
         return [
-            "固定当前项目的关键证据和最小复现实验，避免后续事实改写覆盖成功结论。",
-            "将项目级结论与单条事实分开维护，保证最终结论和过程证据都可追溯。",
+            "Freeze the key evidence and the smallest reproduction so later facts do not overwrite the successful conclusion.",
+            "Keep the project conclusion separate from individual facts so both the conclusion and the evidence stay traceable.",
         ]
 
     steps: list[str] = []
     if vulnerabilities:
-        steps.append("把已确认高价值发现与未确认提权路径分开维护，避免同一事实同时承载正反两类结论。")
+        steps.append("Keep confirmed high-value findings separate from unverified privilege paths so one fact does not carry both conclusions.")
     else:
-        steps.append("优先把已有强信号拆成独立项目结论，避免零散事实长期停留在图里而无法形成主线判断。")
+        steps.append("Turn the strongest signals into a project conclusion so scattered facts do not sit on the graph without a campaign judgment.")
 
     if open_steps:
-        steps.append("优先收敛现有开放步骤，减少在同一候选方向上重复记录相似阴性结果。")
+        steps.append("Close the open steps before recording more similar negative results on the same lead.")
     else:
-        steps.append("当前没有开放步骤，建议由 Decide 围绕目标和最新事实生成少量互不重叠的后续步骤。")
+        steps.append("There are no open steps. Decide should add a few non-overlapping next steps from the goal and the latest facts.")
 
     if hints:
-        steps.append("对关键 hint 保留原文与原始请求细节，避免语义改写导致后续复现实验漂移。")
+        steps.append("Keep the original wording and raw request details of key hints so later reproductions do not drift.")
 
     if counts.high_value_vulnerabilities == 0:
-        steps.append("在项目级视图中优先沉淀可复现的边界、证据和失败条件，而不是过早把目标缩成单一成功标准。")
+        steps.append("Record reproducible boundaries, evidence, and failure conditions before narrowing the goal to a single success criterion.")
 
     return steps[:4]

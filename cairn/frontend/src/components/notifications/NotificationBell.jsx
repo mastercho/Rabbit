@@ -42,7 +42,7 @@ export default function NotificationBell({ setToast }) {
       setItems(Array.isArray(list) ? list : []);
       await loadCount();
     } catch (error) {
-      if (setToast) setToast({ type: "danger", message: error.message || "通知加载失败" });
+      if (setToast) setToast({ type: "danger", message: error.message || "Could not load notifications" });
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function NotificationBell({ setToast }) {
       setCount(Number(res?.count) || 0);
       setItems((prev) => prev.map((item) => ({ ...item, read: true })));
     } catch (error) {
-      if (setToast) setToast({ type: "danger", message: error.message || "操作失败" });
+      if (setToast) setToast({ type: "danger", message: error.message || "The action failed" });
     }
   };
 
@@ -71,7 +71,7 @@ export default function NotificationBell({ setToast }) {
       setCount(Number(res?.count) || 0);
       setItems((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, read: true } : item)));
     } catch (error) {
-      if (setToast) setToast({ type: "danger", message: error.message || "操作失败" });
+      if (setToast) setToast({ type: "danger", message: error.message || "The action failed" });
     }
   };
 
@@ -81,7 +81,7 @@ export default function NotificationBell({ setToast }) {
       setItems([]);
       setCount(0);
     } catch (error) {
-      if (setToast) setToast({ type: "danger", message: error.message || "操作失败" });
+      if (setToast) setToast({ type: "danger", message: error.message || "The action failed" });
     }
   };
 
@@ -104,7 +104,7 @@ export default function NotificationBell({ setToast }) {
   const groupedItems = useMemo(() => {
     const groups = new Map();
     filteredItems.forEach((item) => {
-      const date = String(item.created_at || "").slice(0, 10) || "未标记日期";
+      const date = String(item.created_at || "").slice(0, 10) || "Undated";
       if (!groups.has(date)) groups.set(date, []);
       groups.get(date).push(item);
     });
@@ -114,9 +114,9 @@ export default function NotificationBell({ setToast }) {
   const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items]);
   const warningCount = useMemo(() => items.filter((item) => ["warning", "danger"].includes(item.level)).length, [items]);
   const filterTabs = [
-    { key: "all", label: "全部", count: items.length },
-    { key: "unread", label: "未读", count: unreadCount },
-    { key: "warning", label: "预警", count: warningCount },
+    { key: "all", label: "All", count: items.length },
+    { key: "unread", label: "Unread", count: unreadCount },
+    { key: "warning", label: "Warnings", count: warningCount },
   ];
 
   return (
@@ -125,8 +125,8 @@ export default function NotificationBell({ setToast }) {
         className="icon-button notification-button"
         type="button"
         onClick={togglePanel}
-        aria-label="通知"
-        title="通知"
+        aria-label="Notifications"
+        title="Notifications"
       >
         <Bell size={16} />
         {count > 0 && <span className="notification-dot">{count > 99 ? "99+" : count}</span>}
@@ -135,21 +135,21 @@ export default function NotificationBell({ setToast }) {
         <div className="notification-panel">
           <header className="notification-panel-head">
             <div className="notification-panel-title">
-              <strong>通知</strong>
-              <small>{unreadCount ? `${unreadCount} 条未读` : "全部已读"}</small>
+              <strong>Notifications</strong>
+              <small>{unreadCount ? `${unreadCount} unread` : "All read"}</small>
             </div>
             <div className="notification-actions">
               <button type="button" onClick={markAllRead} disabled={!unreadCount}>
                 <CheckCheck size={14} />
-                全部已读
+                Mark all read
               </button>
               <button type="button" className="danger" onClick={clearAll} disabled={!items.length}>
                 <Trash2 size={14} />
-                清空
+                Clear
               </button>
             </div>
           </header>
-          <div className="notification-filter-tabs" role="tablist" aria-label="通知筛选">
+          <div className="notification-filter-tabs" role="tablist" aria-label="Filter notifications">
             {filterTabs.map((tab) => (
               <button
                 key={tab.key}
@@ -168,12 +168,12 @@ export default function NotificationBell({ setToast }) {
             {loading ? (
               <div className="search-empty">
                 <Loader2 className="spin" size={16} />
-                <span>加载中...</span>
+                <span>Loading...</span>
               </div>
             ) : filteredItems.length === 0 ? (
               <div className="search-empty">
                 <Inbox size={18} />
-                <span>{filter === "all" ? "暂无通知" : "当前筛选下暂无通知"}</span>
+                <span>{filter === "all" ? "No notifications" : "No notifications in this filter"}</span>
               </div>
             ) : (
               groupedItems.map(([date, entries]) => (

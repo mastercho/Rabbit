@@ -22,7 +22,7 @@ LOCAL_HOST_ALIASES = frozenset(
         "docker.for.mac.host.internal",
     }
 )
-SCOPE_BLOCKED_FACT_PREFIX = "范围策略阻断："
+SCOPE_BLOCKED_FACT_PREFIX = "Scope policy blocked: "
 LOOPBACK_NETWORKS = (
     ipaddress.ip_network("127.0.0.0/8"),
     ipaddress.ip_network("::1/128"),
@@ -284,13 +284,13 @@ def _hint_scope_overrides(hints: list[HintRecord]) -> dict[str, Any]:
         if any(marker in content or marker in lowered for marker in SINGLE_TARGET_HINT_MARKERS) and tokens:
             restrict_to_declared_targets = True
             allowed_targets.update(tokens)
-            hard_rules.append(f"只允许围绕声明目标推进：{', '.join(sorted(tokens))}")
+            hard_rules.append(f"Only advance against the declared targets: {', '.join(sorted(tokens))}")
         if "宿主机" in content or any(marker in content or marker in lowered for marker in DENY_LOCAL_HINT_MARKERS):
             deny_local = True
-            hard_rules.append("禁止访问宿主机、本机、localhost、127.0.0.1 与 host.docker.internal。")
+            hard_rules.append("Do not access the host, localhost, 127.0.0.1, or host.docker.internal.")
         if any(marker in content or marker in lowered for marker in DENY_PRIVATE_HINT_MARKERS):
             deny_private = True
-            hard_rules.append("禁止扩展到未声明的私网/内网地址空间。")
+            hard_rules.append("Do not expand into undeclared private or internal address space.")
 
     return {
         "restrict_to_declared_targets": restrict_to_declared_targets,
@@ -423,11 +423,11 @@ def scope_blocked_fact_description(
     allowed_targets = policy_bundle["scope_policy"].get("allowed_targets") or extract_target_tokens(origin)
     target_clause = ""
     if allowed_targets:
-        target_clause = f"；后续仅允许围绕声明目标 {', '.join(allowed_targets)} 继续推进"
+        target_clause = f"; further work may only continue against the declared targets {', '.join(allowed_targets)}"
     return (
-        f"{SCOPE_BLOCKED_FACT_PREFIX}本次探索触达了宿主机、本地地址、私网或其他非声明目标环境伪影，"
-        "该结果不计入目标事实，不应继续沿此方向扩展"
-        f"{target_clause}。"
+        f"{SCOPE_BLOCKED_FACT_PREFIX}This pass touched the host, a local address, a private network, or another undeclared environment artifact. "
+        "The result is not a target fact and should not be extended."
+        f"{target_clause}."
     )
 
 

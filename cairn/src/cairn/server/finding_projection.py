@@ -73,7 +73,7 @@ def _process(
             {
                 "type": "step",
                 "id": str(producer["id"]),
-                "label": "验证步骤",
+                "label": "Verification step",
                 "description": str(producer["description"]),
                 "worker": str(producer["worker"] or producer["creator"]),
                 "time": str(producer["concluded_at"] or producer["created_at"]),
@@ -83,7 +83,7 @@ def _process(
         item = {
             "type": "fact",
             "id": fact_id,
-            "label": "确认事实",
+            "label": "Confirmed fact",
             "description": str(fact["description"]),
         }
         if producer is not None:
@@ -165,7 +165,7 @@ def sync_finding(
             existing_evidence = []
         evidence_data["evidence"] = [
             *existing_evidence,
-            "证据待补全：需要补充原始数据包或证明截图",
+            "Evidence incomplete: add a raw packet or a proof screenshot",
         ]
     proof_packets = enrichment.get("proof_packets", data.get("proof_packets"))
     if not isinstance(proof_packets, list):

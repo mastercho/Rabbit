@@ -94,7 +94,7 @@ class VulnerabilityExportRequest(BaseModel):
 
 
 class ExportRecord(BaseModel):
-    """A single historical export, as listed on the 导出记录 page."""
+    """A single historical export, as listed on the export history page."""
 
     id: int
     created_at: str

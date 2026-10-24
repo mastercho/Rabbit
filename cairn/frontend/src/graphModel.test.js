@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { buildFactGraph, fitFactGraph } from "./graphModel.js";
 
 const fixture = () => ({
-  facts: [{ id: "origin", description: "起点" }, { id: "f001", description: "s001 初始信息收集完成：目标与应用版本已经确认" }],
-  goals: [{ id: "g001", description: "验证目标并记录完整结果", status: "completed", from: ["f001"] }],
+  facts: [{ id: "origin", description: "Origin" }, { id: "f001", description: "s001 initial reconnaissance complete: target and application version confirmed" }],
+  goals: [{ id: "g001", description: "Verify the target and record the full result", status: "completed", from: ["f001"] }],
   steps: [
-    { id: "s001", description: "对目标进行信息收集", from: ["origin"], to: "f001", goal_id: "g001" },
-    { id: "s002", description: "对目标主机进行全面测试这是一段没有空格的很长中文说明", from: ["f001"], goal_id: "g001" },
+    { id: "s001", description: "Collect information about the target", from: ["origin"], to: "f001", goal_id: "g001" },
+    { id: "s002", description: "FullHostAssessmentThisIsALongUnbrokenDescriptionUsedToCheckWrapping", from: ["f001"], goal_id: "g001" },
   ],
   findings: [{ id: "finding001", fact_id: "f001" }],
 });
@@ -16,7 +16,7 @@ test("completed steps are fact-to-fact edges with their own selectable identity"
   const elements = buildFactGraph(fixture());
   assert.ok(!elements.some(el => el.data.id === "s001"));
   assert.deepEqual(elements.find(el => el.data.id === "step:s001:origin").data, {
-    id: "step:s001:origin", source: "origin", target: "f001", stepId: "s001", label: "对目标进行信息收集", status: "concluded",
+    id: "step:s001:origin", source: "origin", target: "f001", stepId: "s001", label: "Collect information about the target", status: "concluded",
   });
   assert.ok(!elements.some(el => el.data.id === "finding001"));
 });
@@ -33,7 +33,7 @@ test("open steps remain selectable compact placeholders, not overflowing text bo
   }
 });
 
-test("Chinese labels use explicit short lines and keep goal completion status", () => {
+test("Fact labels wrap onto short lines and keep goal completion status", () => {
   const elements = buildFactGraph(fixture());
   const fact = elements.find(el => el.data.id === "f001");
   assert.ok(fact.data.label.includes("\n"));

@@ -438,7 +438,7 @@ def _target_host(project_id: str, text: str, endpoint: str, context: str) -> str
                 if port_match:
                     host += ":" + port_match.group(1)
             return host
-    return "<项目事实未记录目标主机>"
+    return "<project facts did not record a target host>"
 
 
 def _request_method(context: str, endpoint: str) -> str:
@@ -495,8 +495,8 @@ def _response_body(context: str) -> str:
         re.IGNORECASE,
     )
     if behavior:
-        return f"<事实仅记录响应行为：{behavior.group(0).strip()}>"
-    return "<事实未记录原始响应体，需复测补充>"
+        return f"<facts only record response behavior: {behavior.group(0).strip()}>"
+    return "<facts did not record a raw response body; retest to fill it in>"
 
 
 def _reconstructed_http_packets(vulns: list[Vulnerability]) -> list[dict[str, str]]:
@@ -560,7 +560,7 @@ def _reconstructed_http_packets(vulns: list[Vulnerability]) -> list[dict[str, st
             elif method != "GET":
                 body = encoded
         elif method != "GET":
-            body = "<根据事实补充请求参数或载荷>"
+            body = "<add request parameters or a payload from the facts>"
 
         host = _target_host(project_id, text, endpoint, context)
         request_lines = [
@@ -584,7 +584,7 @@ def _reconstructed_http_packets(vulns: list[Vulnerability]) -> list[dict[str, st
             context,
             re.IGNORECASE,
         )
-        status = status_match.group(1) if status_match else "<事实未记录状态码>"
+        status = status_match.group(1) if status_match else "<facts did not record a status code>"
         response_body = _response_body(context)
         content_type = (
             "application/json"
@@ -593,7 +593,7 @@ def _reconstructed_http_packets(vulns: list[Vulnerability]) -> list[dict[str, st
         )
         packets.append(
             {
-                "title": f"{endpoint.split('?', 1)[0]} 漏洞证明（依据事实重构）",
+                "title": f"{endpoint.split('?', 1)[0]} proof (reconstructed from facts)",
                 "request": "\n".join(request_lines),
                 "response": (
                     f"HTTP/1.1 {status}\n"
@@ -601,8 +601,8 @@ def _reconstructed_http_packets(vulns: list[Vulnerability]) -> list[dict[str, st
                     f"{response_body}"
                 ),
                 "note": (
-                    f"该数据包仅依据当前项目 {project_id} 的确认事实 {fact_ids} 重构，"
-                    "不是原始抓包。事实未记录的字段使用占位符，复测时应以真实请求和响应替换。"
+                    f"This packet was reconstructed from confirmed facts {fact_ids} in project {project_id}. "
+                    "It is not a raw capture. Fields the facts did not record use placeholders and should be replaced with the real request and response on retest."
                 ),
             }
         )
@@ -616,7 +616,7 @@ def _proof_packets(vulns: list[Vulnerability]) -> list[dict[str, str]]:
     for vuln in vulns:
         for packet in vuln.proof_packets or []:
             normalized = {
-                "title": str(packet.get("title") or "漏洞证明").strip(),
+                "title": str(packet.get("title") or "Proof").strip(),
                 "request": str(packet.get("request") or "").strip(),
                 "response": str(packet.get("response") or "").strip(),
                 "note": str(packet.get("note") or "").strip(),
@@ -809,8 +809,8 @@ def _merge_vulnerabilities(vulnerabilities: list[Vulnerability]) -> list[Vulnera
         description = winner.description
         if len(items) > 1:
             description = (
-                f"{description} 已合并同一项目内 {len(items)} 个相关探索事实"
-                f"（{', '.join(related_fact_ids)}），最终确认事实为 {winner.fact_id}。"
+                f"{description} Merged {len(items)} related facts in this project"
+                f" ({', '.join(related_fact_ids)}). Final confirmed fact: {winner.fact_id}."
             )
 
         merged.append(
@@ -935,14 +935,14 @@ def upload_vulnerability_screenshot(vulnerability_id: str, payload: ScreenshotEv
         raise HTTPException(404, "Vulnerability not found")
     mime = payload.mime_type.lower().strip()
     if mime not in {"image/png", "image/jpeg"}:
-        raise HTTPException(422, "只支持 PNG 或 JPEG 截图")
+        raise HTTPException(422, "Only PNG or JPEG screenshots are supported")
     try:
         content = base64.b64decode(payload.content_base64, validate=True)
     except Exception as exc:
-        raise HTTPException(422, "截图内容无效") from exc
+        raise HTTPException(422, "Screenshot content is invalid") from exc
     valid_magic = content.startswith(b"\x89PNG\r\n\x1a\n") or content.startswith(b"\xff\xd8\xff")
     if not valid_magic or len(content) > 8 * 1024 * 1024:
-        raise HTTPException(422, "截图无效或超过 8MB")
+        raise HTTPException(422, "The screenshot is invalid or larger than 8MB")
     artifact_id = f"evi_{uuid.uuid4().hex[:16]}"
     with get_conn() as conn:
         conn.execute(
@@ -1164,44 +1164,44 @@ def _render_markdown_export(vulnerabilities: list[Vulnerability]) -> str:
     lines: list[str] = [
         f"# {_report_title(vulnerabilities)}",
         "",
-        "> Rabbit 自动化安全探索生成的漏洞报告。报告按项目和漏洞组织，包含确认事实、关键证据、证明数据包与漏洞浮现过程。",
+        "> Vulnerability report generated by Rabbit. Findings are grouped by project and include the confirmed fact, key evidence, proof packets, and how the issue emerged.",
         "",
-        "## 目录",
+        "## Contents",
         "",
-        "- [报告概览](#报告概览)",
-        "- [漏洞清单](#漏洞清单)",
+        "- [Overview](#overview)",
+        "- [Findings](#findings)",
     ]
     for project_id, project_name, _items in _project_groups(vulnerabilities):
-        anchor = f"项目{project_name}{project_id}".lower()
-        lines.append(f"- [项目：{project_name}（{project_id}）](#{anchor})")
+        anchor = f"project-{project_name}-{project_id}".lower()
+        lines.append(f"- [Project: {project_name} ({project_id})](#{anchor})")
     lines.extend(
         [
             "",
             "---",
             "",
-        "## 报告概览",
+        "## Overview",
         "",
-        "| 指标 | 数量 |",
+        "| Metric | Count |",
         "| --- | ---: |",
-        f"| 漏洞总数 | {len(vulnerabilities)} |",
-        f"| 严重 | {counts['critical']} |",
-        f"| 高危 | {counts['high']} |",
-        f"| 中危 | {counts['medium']} |",
-        f"| 低危 | {counts['low']} |",
+        f"| Vulnerabilities | {len(vulnerabilities)} |",
+        f"| Critical | {counts['critical']} |",
+        f"| High | {counts['high']} |",
+        f"| Medium | {counts['medium']} |",
+        f"| Low | {counts['low']} |",
         "",
         ]
     )
     if not vulnerabilities:
-        lines.extend(["当前范围内没有漏洞。", ""])
+        lines.extend(["No vulnerabilities in the current scope.", ""])
         return "\n".join(lines)
 
     lines.extend(
         [
             "---",
             "",
-            "## 漏洞清单",
+            "## Findings",
             "",
-            "| ID | 漏洞名称 | 项目 | 严重程度 | 确认事实 | 发现时间 |",
+            "| ID | Title | Project | Severity | Confirmed fact | Discovered |",
             "| --- | --- | --- | --- | --- | --- |",
         ]
     )
@@ -1215,83 +1215,83 @@ def _render_markdown_export(vulnerabilities: list[Vulnerability]) -> str:
     lines.append("")
 
     for project_id, project_name, items in _project_groups(vulnerabilities):
-        lines.extend(["---", "", f"## 项目：{project_name}（`{project_id}`）", ""])
+        lines.extend(["---", "", f"## Project: {project_name} (`{project_id}`)", ""])
         for index, vuln in enumerate(items, start=1):
             composed = compose_vulnerability_report(vuln, use_model=False)
             lines.extend(
                 [
                     f"### {index}. {vuln.title}",
                     "",
-                    f"> 风险级别：**{_SEVERITY_LABELS.get(vuln.severity, vuln.severity)}**；确认事实：`{_md_escape(vuln.fact_id)}`。",
+                    f"> Severity: **{_SEVERITY_LABELS.get(vuln.severity, vuln.severity)}**. Confirmed fact: `{_md_escape(vuln.fact_id)}`.",
                     "",
-                    "| 字段 | 内容 |",
+                    "| Field | Value |",
                     "| --- | --- |",
-                    f"| 严重程度 | {_SEVERITY_LABELS.get(vuln.severity, vuln.severity)} |",
-                    f"| 确认事实 | `{_md_escape(vuln.fact_id)}` |",
-                    f"| 关联事实 | {_md_escape(', '.join(vuln.related_fact_ids or [vuln.fact_id]))} |",
-                    f"| 来源意图 | {_md_escape(vuln.source_intent_id or '未记录')} |",
-                    f"| 工作节点 | {_md_escape(vuln.source_worker or '未记录')} |",
-                    f"| 发现时间 | {_md_escape(vuln.discovered_at)} |",
+                    f"| Severity | {_SEVERITY_LABELS.get(vuln.severity, vuln.severity)} |",
+                    f"| Confirmed fact | `{_md_escape(vuln.fact_id)}` |",
+                    f"| Related facts | {_md_escape(', '.join(vuln.related_fact_ids or [vuln.fact_id]))} |",
+                    f"| Source step | {_md_escape(vuln.source_intent_id or 'Not recorded')} |",
+                    f"| Worker | {_md_escape(vuln.source_worker or 'Not recorded')} |",
+                    f"| Discovered | {_md_escape(vuln.discovered_at)} |",
                     "",
                 ]
             )
             lines.extend(render_narrative_markdown(composed))
 
-            lines.extend(["#### 漏洞证明数据包", ""])
+            lines.extend(["#### Proof packets", ""])
             packets = vuln.proof_packets or []
             if not packets:
-                lines.extend(["未记录真实请求/响应数据包。", ""])
+                lines.extend(["No raw request/response packet was recorded.", ""])
             for packet_index, packet in enumerate(packets, start=1):
                 lines.extend(
                     [
-                        f"**证明 {packet_index}：{packet.get('title') or '漏洞证明'}**",
+                        f"**Proof {packet_index}: {packet.get('title') or 'Proof'}**",
                         "",
-                        "请求数据包：",
+                        "Request:",
                         "",
                         "```http",
-                        str(packet.get("request") or "未记录"),
+                        str(packet.get("request") or "Not recorded"),
                         "```",
                         "",
-                        "响应/回显：",
+                        "Response:",
                         "",
                         "```text",
-                        str(packet.get("response") or "未记录"),
+                        str(packet.get("response") or "Not recorded"),
                         "```",
                     ]
                 )
                 if packet.get("note"):
-                    lines.extend(["", f"说明：{packet['note']}"])
+                    lines.extend(["", f"Note: {packet['note']}"])
                 lines.append("")
 
-            lines.extend(["#### 漏洞浮现过程", ""])
+            lines.extend(["#### How it emerged", ""])
             for step_index, step in enumerate(vuln.process or [], start=1):
-                label = step.get("label") or step.get("type") or "过程"
+                label = step.get("label") or step.get("type") or "step"
                 step_id = step.get("id") or ""
-                worker = f"；节点：{step.get('worker')}" if step.get("worker") else ""
-                time = f"；时间：{step.get('time')}" if step.get("time") else ""
+                worker = f"; worker: {step.get('worker')}" if step.get("worker") else ""
+                time = f"; time: {step.get('time')}" if step.get("time") else ""
                 lines.append(
-                    f"{step_index}. **{label} `{step_id}`**{worker}{time}："
-                    f"{step.get('description') or '无描述'}"
+                    f"{step_index}. **{label} `{step_id}`**{worker}{time}: "
+                    f"{step.get('description') or 'No description'}"
                 )
             lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
 
 _SEVERITY_LABELS = {
-    "critical": "严重",
-    "high": "高危",
-    "medium": "中危",
-    "low": "低危",
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
 }
 
 
 def _report_title(vulnerabilities: list[Vulnerability]) -> str:
     if len(vulnerabilities) == 1:
-        return f"{vulnerabilities[0].project_name} - 单漏洞验证报告"
+        return f"{vulnerabilities[0].project_name} - Single-finding report"
     projects = _unique([v.project_name for v in vulnerabilities])
     if len(projects) == 1:
-        return f"{projects[0]} - 渗透测试漏洞报告"
-    return "Rabbit 渗透测试漏洞报告"
+        return f"{projects[0]} - Penetration Test Report"
+    return "Rabbit Penetration Test Report"
 
 
 def _project_groups(vulnerabilities: list[Vulnerability]) -> list[tuple[str, str, list[Vulnerability]]]:
@@ -1350,15 +1350,15 @@ def update_vulnerability_status(
 
     _apply_merged_vulnerability_status(target, payload.status)
     _record_review_status(members, payload.status)
-    status_label = "已忽略" if payload.status == "ignored" else "已确认"
+    status_label = "ignored" if payload.status == "ignored" else "confirmed"
     record_audit(
         "vulnerability.status",
-        f"漏洞「{target.title}」标记为{status_label}",
+        f"Vulnerability \"{target.title}\" marked {status_label}",
         target_type="vulnerability",
         target_id=vulnerability_id,
     )
     record_notification(
-        f"漏洞状态已更新",
+        "Vulnerability status updated",
         level="warning" if payload.status == "ignored" else "success",
         body=f"{target.project_name} · {target.fact_id} · {status_label}",
         link="#/vulnerabilities",
@@ -1386,17 +1386,17 @@ def batch_update_vulnerability_status(payload: VulnerabilityBatchStatusUpdate) -
         ] or [target]
         _record_review_status(members, payload.status)
 
-    status_label = "已忽略" if payload.status == "ignored" else "已确认"
+    status_label = "ignored" if payload.status == "ignored" else "confirmed"
     record_audit(
         "vulnerability.batch_status",
-        f"批量更新 {len(targets)} 条漏洞为{status_label}",
+        f"Updated {len(targets)} vulnerabilities to {status_label}",
         target_type="vulnerability",
         detail=", ".join(target.id for target in targets[:10]),
     )
     record_notification(
-        f"漏洞批量状态更新",
+        "Vulnerability statuses updated",
         level="warning" if payload.status == "ignored" else "success",
-        body=f"{len(targets)} 条漏洞已标记为{status_label}",
+        body=f"{len(targets)} vulnerabilities marked {status_label}",
         link="#/vulnerabilities",
     )
     return VulnerabilityBatchStatusResult(
@@ -1410,53 +1410,53 @@ def batch_update_vulnerability_status(payload: VulnerabilityBatchStatusUpdate) -
 def _report_lines(vulnerabilities: list[Vulnerability]) -> list[str]:
     counts = _summarize(vulnerabilities)
     lines = [
-        "Rabbit 漏洞报告",
+        "Rabbit vulnerability report",
         "",
-        "报告概览",
-        f"严重：{counts['critical']}  高危：{counts['high']}  中危：{counts['medium']}  低危：{counts['low']}",
-        f"漏洞总数：{len(vulnerabilities)}",
+        "Overview",
+        f"Critical: {counts['critical']}  High: {counts['high']}  Medium: {counts['medium']}  Low: {counts['low']}",
+        f"Vulnerabilities: {len(vulnerabilities)}",
         "",
     ]
     if not vulnerabilities:
-        lines.append("当前筛选条件下没有漏洞。")
+        lines.append("No vulnerabilities match the current filter.")
         return lines
 
     for index, vuln in enumerate(vulnerabilities, start=1):
         lines.extend(
             [
                 f"{index}. {vuln.title}",
-                f"严重程度：{_SEVERITY_LABELS.get(vuln.severity, vuln.severity)}",
-                f"项目：{vuln.project_name}（{vuln.project_id}）",
-                f"确认事实：{vuln.fact_id}",
-                f"关联事实：{', '.join(vuln.related_fact_ids or [vuln.fact_id])}",
-                f"发现时间：{vuln.discovered_at}",
-                "漏洞描述：",
+                f"Severity: {_SEVERITY_LABELS.get(vuln.severity, vuln.severity)}",
+                f"Project: {vuln.project_name} ({vuln.project_id})",
+                f"Confirmed fact: {vuln.fact_id}",
+                f"Related facts: {', '.join(vuln.related_fact_ids or [vuln.fact_id])}",
+                f"Discovered: {vuln.discovered_at}",
+                "Description:",
                 vuln.description,
-                "关键证据：",
+                "Key evidence:",
             ]
         )
-        for evidence in vuln.evidence or ["未记录"]:
+        for evidence in vuln.evidence or ["Not recorded"]:
             lines.append(f"- {evidence}")
         if vuln.proof_packets:
-            lines.append("漏洞证明数据包：")
+            lines.append("Proof packets:")
             for packet_index, packet in enumerate(vuln.proof_packets, start=1):
-                lines.append(f"证明 {packet_index}：{packet.get('title') or '漏洞证明'}")
-                lines.append("请求：")
-                lines.extend(str(packet.get("request") or "未记录").splitlines())
-                lines.append("响应/回显：")
-                lines.extend(str(packet.get("response") or "未记录").splitlines())
+                lines.append(f"Proof {packet_index}: {packet.get('title') or 'Proof'}")
+                lines.append("Request:")
+                lines.extend(str(packet.get("request") or "Not recorded").splitlines())
+                lines.append("Response:")
+                lines.extend(str(packet.get("response") or "Not recorded").splitlines())
                 note = packet.get("note")
                 if note:
-                    lines.append(f"说明：{note}")
+                    lines.append(f"Note: {note}")
         else:
-            lines.extend(["漏洞证明数据包：", "未记录真实请求/响应数据包。"])
+            lines.extend(["Proof packets:", "No raw request/response packet was recorded."])
         if vuln.process:
-            lines.append("漏洞浮现过程：")
+            lines.append("How it emerged:")
             for step_index, step in enumerate(vuln.process, start=1):
-                step_type = step.get("type", "过程")
+                step_type = step.get("type", "step")
                 step_id = step.get("id", "")
                 desc = step.get("description", "")
-                lines.append(f"{step_index}. {step_type} {step_id}：{desc}")
+                lines.append(f"{step_index}. {step_type} {step_id}: {desc}")
         lines.append("")
     return lines
 
@@ -1465,15 +1465,15 @@ def _report_plain_lines(vulnerabilities: list[Vulnerability]) -> list[str]:
     counts = _summarize(vulnerabilities)
     lines = [
         _report_title(vulnerabilities),
-        "报告概览",
-        f"漏洞总数：{len(vulnerabilities)}",
-        f"严重：{counts['critical']}    高危：{counts['high']}    中危：{counts['medium']}    低危：{counts['low']}",
+        "Overview",
+        f"Vulnerabilities: {len(vulnerabilities)}",
+        f"Critical: {counts['critical']}    High: {counts['high']}    Medium: {counts['medium']}    Low: {counts['low']}",
         "",
     ]
     if not vulnerabilities:
-        return lines + ["当前范围内没有漏洞。"]
+        return lines + ["No vulnerabilities in the current scope."]
 
-    lines.extend(["漏洞清单", "ID | 漏洞名称 | 项目 | 严重程度 | 确认事实", "-" * 72])
+    lines.extend(["Findings", "ID | Title | Project | Severity | Confirmed fact", "-" * 72])
     for index, vuln in enumerate(vulnerabilities, start=1):
         lines.append(
             f"{index:02d} | {vuln.title} | {vuln.project_name}({vuln.project_id}) | "
@@ -1482,40 +1482,40 @@ def _report_plain_lines(vulnerabilities: list[Vulnerability]) -> list[str]:
     lines.append("")
 
     for project_id, project_name, items in _project_groups(vulnerabilities):
-        lines.extend([f"项目：{project_name}（{project_id}）", "-" * 72])
+        lines.extend([f"Project: {project_name} ({project_id})", "-" * 72])
         for index, vuln in enumerate(items, start=1):
             composed = compose_vulnerability_report(vuln, use_model=False)
             lines.extend(
                 [
                     f"{index}. {vuln.title}",
-                    f"严重程度：{_SEVERITY_LABELS.get(vuln.severity, vuln.severity)}",
-                    f"确认事实：{vuln.fact_id}",
-                    f"关联事实：{', '.join(vuln.related_fact_ids or [vuln.fact_id])}",
-                    f"发现时间：{vuln.discovered_at}",
+                    f"Severity: {_SEVERITY_LABELS.get(vuln.severity, vuln.severity)}",
+                    f"Confirmed fact: {vuln.fact_id}",
+                    f"Related facts: {', '.join(vuln.related_fact_ids or [vuln.fact_id])}",
+                    f"Discovered: {vuln.discovered_at}",
                 ]
             )
             lines.extend(render_narrative_plain_lines(composed))
-            lines.append("漏洞证明数据包：")
+            lines.append("Proof packets:")
             packets = vuln.proof_packets or []
             if not packets:
-                lines.append("未记录真实请求/响应数据包。")
+                lines.append("No raw request/response packet was recorded.")
             for packet_index, packet in enumerate(packets, start=1):
                 lines.extend(
                     [
-                        f"证明 {packet_index}：{packet.get('title') or '漏洞证明'}",
-                        "请求：",
-                        str(packet.get("request") or "未记录"),
-                        "响应/回显：",
-                        str(packet.get("response") or "未记录"),
+                        f"Proof {packet_index}: {packet.get('title') or 'Proof'}",
+                        "Request:",
+                        str(packet.get("request") or "Not recorded"),
+                        "Response:",
+                        str(packet.get("response") or "Not recorded"),
                     ]
                 )
                 if packet.get("note"):
-                    lines.append(f"说明：{packet['note']}")
-            lines.append("漏洞浮现过程：")
+                    lines.append(f"Note: {packet['note']}")
+            lines.append("How it emerged:")
             for step_index, step in enumerate(vuln.process or [], start=1):
                 lines.append(
-                    f"{step_index}. {step.get('label') or step.get('type') or '过程'} "
-                    f"{step.get('id') or ''}：{step.get('description') or '无描述'}"
+                    f"{step_index}. {step.get('label') or step.get('type') or 'step'} "
+                    f"{step.get('id') or ''}: {step.get('description') or 'No description'}"
                 )
             lines.append("")
     return lines
@@ -1562,7 +1562,7 @@ def _render_pdf_export(vulnerabilities: list[Vulnerability]) -> bytes:
 
     lines_per_page = 42
     pages = [wrapped[i : i + lines_per_page] for i in range(0, len(wrapped), lines_per_page)]
-    pages = pages or [[_report_title(vulnerabilities), "", "当前范围内没有漏洞。"]]
+    pages = pages or [[_report_title(vulnerabilities), "", "No vulnerabilities in the current scope."]]
 
     objects: list[bytes] = [b"" for _ in range(5)]
     page_object_numbers: list[int] = []
@@ -1575,7 +1575,7 @@ def _render_pdf_export(vulnerabilities: list[Vulnerability]) -> bytes:
         y = 818
         for idx, line in enumerate(page_lines):
             font_size = 16 if idx == 0 else 10
-            if line in ("报告概览", "漏洞清单") or line.startswith("项目："):
+            if line in ("Overview", "Findings") or line.startswith("Project:"):
                 font_size = 13
                 y -= 6
             stream_lines.append(f"BT /F1 {font_size} Tf {48} {y} Td <{_pdf_hex_text(line)}> Tj ET")
@@ -1653,7 +1653,7 @@ def _docx_table(rows: list[list[str]], header: bool = False) -> str:
 
 
 def _docx_pre_block(text: str) -> str:
-    rows = [[line] for line in str(text or "未记录").splitlines() or ["未记录"]]
+    rows = [[line] for line in str(text or "Not recorded").splitlines() or ["Not recorded"]]
     return _docx_table(rows)
 
 
@@ -1661,10 +1661,10 @@ def _render_docx_export(vulnerabilities: list[Vulnerability]) -> bytes:
     counts = _summarize(vulnerabilities)
     body: list[str] = [
         _docx_paragraph(_report_title(vulnerabilities), style="Title", color="0F172A"),
-        _docx_paragraph("报告概览", style="Heading1"),
+        _docx_paragraph("Overview", style="Heading1"),
         _docx_table(
             [
-                ["总漏洞数", "严重", "高危", "中危", "低危"],
+                ["Vulnerabilities", "Critical", "High", "Medium", "Low"],
                 [str(len(vulnerabilities)), str(counts["critical"]), str(counts["high"]), str(counts["medium"]), str(counts["low"])],
             ],
             header=True,
@@ -1673,9 +1673,9 @@ def _render_docx_export(vulnerabilities: list[Vulnerability]) -> bytes:
     if vulnerabilities:
         body.extend(
             [
-                _docx_paragraph("漏洞清单", style="Heading1"),
+                _docx_paragraph("Findings", style="Heading1"),
                 _docx_table(
-                    [["ID", "漏洞名称", "项目", "严重程度", "确认事实"]]
+                    [["ID", "Title", "Project", "Severity", "Confirmed fact"]]
                     + [
                         [
                             f"H-{idx:02d}",
@@ -1691,46 +1691,46 @@ def _render_docx_export(vulnerabilities: list[Vulnerability]) -> bytes:
             ]
         )
     for project_id, project_name, items in _project_groups(vulnerabilities):
-        body.append(_docx_paragraph(f"项目：{project_name}（{project_id}）", style="Heading1"))
+        body.append(_docx_paragraph(f"Project: {project_name} ({project_id})", style="Heading1"))
         for idx, vuln in enumerate(items, start=1):
             body.extend(
                 [
                     _docx_paragraph(f"{idx}. {vuln.title}", style="Heading2"),
                     _docx_table(
                         [
-                            ["字段", "内容"],
-                            ["严重程度", _SEVERITY_LABELS.get(vuln.severity, vuln.severity)],
-                            ["确认事实", vuln.fact_id],
-                            ["关联事实", ", ".join(vuln.related_fact_ids or [vuln.fact_id])],
-                            ["发现时间", vuln.discovered_at],
-                            ["工作节点", vuln.source_worker or "未记录"],
+                            ["Field", "Value"],
+                            ["Severity", _SEVERITY_LABELS.get(vuln.severity, vuln.severity)],
+                            ["Confirmed fact", vuln.fact_id],
+                            ["Related facts", ", ".join(vuln.related_fact_ids or [vuln.fact_id])],
+                            ["Discovered", vuln.discovered_at],
+                            ["Worker", vuln.source_worker or "Not recorded"],
                         ],
                         header=True,
                     ),
-                    _docx_paragraph("漏洞描述", style="Heading3"),
+                    _docx_paragraph("Description", style="Heading3"),
                     _docx_paragraph(vuln.description),
-                    _docx_paragraph("关键证据", style="Heading3"),
+                    _docx_paragraph("Key evidence", style="Heading3"),
                 ]
             )
-            body.append(_docx_table([["证据"]] + [[item] for item in (vuln.evidence or ["未记录"])], header=True))
-            body.append(_docx_paragraph("漏洞证明数据包", style="Heading3"))
+            body.append(_docx_table([["Evidence"]] + [[item] for item in (vuln.evidence or ["Not recorded"])], header=True))
+            body.append(_docx_paragraph("Proof packets", style="Heading3"))
             packets = vuln.proof_packets or []
             if not packets:
-                body.append(_docx_paragraph("未记录真实请求/响应数据包。"))
+                body.append(_docx_paragraph("No raw request/response packet was recorded."))
             for packet_index, packet in enumerate(packets, start=1):
-                body.append(_docx_paragraph(f"证明 {packet_index}：{packet.get('title') or '漏洞证明'}", style="Heading4"))
-                body.append(_docx_table([["请求数据包", "响应/回显"], [packet.get("request") or "未记录", packet.get("response") or "未记录"]], header=True))
+                body.append(_docx_paragraph(f"Proof {packet_index}: {packet.get('title') or 'Proof'}", style="Heading4"))
+                body.append(_docx_table([["Request", "Response"], [packet.get("request") or "Not recorded", packet.get("response") or "Not recorded"]], header=True))
                 if packet.get("note"):
-                    body.append(_docx_paragraph(f"说明：{packet['note']}"))
-            body.append(_docx_paragraph("漏洞浮现过程", style="Heading3"))
+                    body.append(_docx_paragraph(f"Note: {packet['note']}"))
+            body.append(_docx_paragraph("How it emerged", style="Heading3"))
             body.append(
                 _docx_table(
-                    [["步骤", "类型/ID", "说明"]]
+                    [["Step", "Type/ID", "Notes"]]
                     + [
                         [
                             str(step_index),
-                            f"{step.get('label') or step.get('type') or '过程'} {step.get('id') or ''}",
-                            step.get("description") or "无描述",
+                            f"{step.get('label') or step.get('type') or 'step'} {step.get('id') or ''}",
+                            step.get("description") or "No description",
                         ]
                         for step_index, step in enumerate(vuln.process or [], start=1)
                     ],
@@ -1738,7 +1738,7 @@ def _render_docx_export(vulnerabilities: list[Vulnerability]) -> bytes:
                 )
             )
     if not vulnerabilities:
-        body.append(_docx_paragraph("当前范围内没有漏洞。"))
+        body.append(_docx_paragraph("No vulnerabilities in the current scope."))
     document_xml = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
@@ -1791,11 +1791,11 @@ def _describe_export_scope(vulnerabilities: list[Vulnerability], project_id: str
     project_ids = {item.project_id for item in vulnerabilities}
     if project_id and len(project_ids) == 1:
         name = vulnerabilities[0].project_name if vulnerabilities else project_id
-        return f"{name}（{len(vulnerabilities)} 条）", project_id, name
+        return f"{name} ({len(vulnerabilities)})", project_id, name
     if len(project_ids) == 1 and vulnerabilities:
         only_name = vulnerabilities[0].project_name
-        return f"{only_name}（{len(vulnerabilities)} 条）", vulnerabilities[0].project_id, only_name
-    return f"全部漏洞（{len(vulnerabilities)} 条）", None, None
+        return f"{only_name} ({len(vulnerabilities)})", vulnerabilities[0].project_id, only_name
+    return f"All vulnerabilities ({len(vulnerabilities)})", None, None
 
 
 def _record_export(
@@ -1838,7 +1838,7 @@ def _record_export(
         pass
     record_audit(
         "vulnerability.export",
-        f"导出漏洞报告（{fmt.upper()}）· {scope}",
+        f"Exported a vulnerability report ({fmt.upper()}) · {scope}",
         target_type="export",
         target_id=filename,
     )
@@ -1846,7 +1846,7 @@ def _record_export(
 
 @router.get("/export-records", response_model=list[ExportRecord])
 def list_export_records(limit: int = Query(default=50, ge=1, le=200)) -> list[ExportRecord]:
-    """Return the most recent export actions, newest first (导出记录 page)."""
+    """Return the most recent export actions, newest first (export history page)."""
     with get_conn() as conn:
         rows = conn.execute(
             """
@@ -1996,11 +1996,11 @@ def refresh_vulnerabilities() -> VulnerabilitySummary:
     request_report_sync()
     summary = vulnerabilities_summary()
     total = summary.critical + summary.high + summary.medium + summary.low
-    record_audit("vulnerability.refresh", "刷新漏洞报告汇总", target_type="vulnerability")
+    record_audit("vulnerability.refresh", "Refreshed the vulnerability report summary", target_type="vulnerability")
     record_notification(
-        "漏洞报告已刷新",
+        "Vulnerability reports refreshed",
         level="info",
-        body=f"当前共 {total} 条漏洞，严重 {summary.critical} / 高危 {summary.high}",
+        body=f"{total} vulnerabilities, {summary.critical} critical / {summary.high} high",
         link="#/vulnerabilities",
     )
     return summary

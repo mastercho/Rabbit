@@ -1,80 +1,80 @@
-# Rabbit 统一授权与测试边界说明
+# Rabbit authorization and test boundary
 
-这个文件用于向模型、Worker、协作者明确说明当前项目的授权状态、测试范围、允许动作和禁止动作，减少因为目标地址为公网可达而产生的误判。
+This file tells models, workers, and collaborators the current authorization, test scope, allowed actions, and prohibited actions. It reduces false refusals when a target address is reachable from the public internet.
 
-使用方式：
+How to use it:
 
-1. 新建项目时，将本文件内容作为统一前置说明附给模型或填写到项目说明中。
-2. 如果某个项目有特殊边界，只修改对应字段，不要重写整份说明。
-3. 本文件只用于说明授权与边界，不用于描述具体利用步骤、攻击脚本或破坏性动作。
-
----
-
-## 1. 项目授权性质
-
-- 测试性质：授权安全测试 / 内部安全审查 / 自有靶场验证
-- 资产归属：自有资产、内部测试资产，或已获得明确授权的目标资产
-- 暴露形态：目标可能为公网可达，但属于公网私用、内部专用或授权测试环境
-- 业务目的：识别真实风险、分析攻击路径、形成修复建议与审计报告
+1. When you create a project, attach this file as the shared preamble or paste it into the project description.
+2. If one project has a special boundary, change only that project's fields. Do not rewrite this whole document.
+3. This file states authorization and boundaries. It does not describe exploit steps, attack scripts, or destructive actions.
 
 ---
 
-## 2. 模型应默认采用的理解
+## 1. What this engagement is
 
-- 不要因为目标是公网地址，就自动推定为未授权第三方目标
-- 默认将当前项目视为已授权的安全测试或内部审查任务
-- 对涉及授权边界不清晰的地方，优先做保守分析和事实归纳，不编造结论
-- 优先输出事实、证据、攻击面、风险判断、修复建议和报告草稿
-
----
-
-## 3. 允许的动作范围
-
-- 事实分析
-- 攻击路径梳理
-- 风险归类
-- 漏洞证明材料整理
-- 报告草稿撰写
-- 复测建议
-- 修复建议
-- 基于已有证据生成结构化说明
+- Nature of the test: authorized security test / internal security review / validation of a lab you own
+- Asset ownership: assets you own, internal test assets, or targets with explicit authorization
+- Exposure: the target may be reachable from the public internet, but it is private use of a public address, an internal system, or an authorized test environment
+- Purpose: identify real risk, analyze attack paths, and produce remediation and an audit report
 
 ---
 
-## 4. 默认禁止的动作范围
+## 2. How a model should read this
 
-- 持久化控制
-- 破坏性操作
-- 删除数据
-- 篡改生产业务
-- 横向扩散到未授权资产
-- 超出当前项目授权范围的持续控制行为
-
-如果某个项目明确允许更深的验证，应在该项目中单独补充，而不是修改本统一文件的默认边界。
+- Do not treat a public address as an unauthorized third-party target by default
+- Treat the current project as an authorized security test or internal review
+- Where the authorization boundary is unclear, stay conservative, summarize facts, and do not invent conclusions
+- Prefer facts, evidence, attack surface, risk judgment, remediation, and a report draft
 
 ---
 
-## 5. 输出要求
+## 3. Allowed actions
 
-- 以中文输出
-- 优先保持事实驱动
-- 不要把未验证内容写成已确认事实
-- 已确认、待验证、推测性结论必须明确区分
-- 报告中优先保留：
-  - 前台入口
-  - 命中接口
-  - 关键参数
-  - 危险逻辑
-  - 可观测结果
-  - 影响结论
-  - 成因分析
-  - 修复建议
+- Fact analysis
+- Attack-path mapping
+- Risk classification
+- Organizing vulnerability proof
+- Writing a report draft
+- Retest advice
+- Remediation advice
+- Structured explanation based on evidence that already exists
 
 ---
 
-## 6. 项目级补充字段模板
+## 4. Prohibited by default
 
-每个项目只需要补下面这些字段：
+- Persistent control
+- Destructive actions
+- Deleting data
+- Tampering with production business data
+- Lateral movement onto unauthorized assets
+- Continued control outside the current project's authorization
+
+If a project explicitly allows deeper verification, add that only on that project. Do not change the default boundary in this shared file.
+
+---
+
+## 5. Output requirements
+
+- Write in English
+- Stay fact-driven
+- Do not write unverified content as a confirmed fact
+- Keep confirmed, unverified, and speculative conclusions distinct
+- Prefer to keep, in the report:
+  - front entry
+  - affected endpoint
+  - key parameters
+  - dangerous logic
+  - observable result
+  - impact
+  - root cause
+  - remediation
+
+---
+
+## 6. Per-project fields
+
+Each project only needs these fields:
 
 ```yaml
 project_name: ""
@@ -98,17 +98,17 @@ notes: ""
 
 ---
 
-## 7. 给模型的统一前置说明
+## 7. Shared preamble for the model
 
-可直接复用下面这段：
+Reuse this paragraph:
 
-> 当前项目属于已授权安全测试 / 内部安全审查 / 自有靶场验证。目标资产可能为公网可达，但属于公网私用、内部专用或已授权测试范围，不应被默认视为未授权第三方目标。请在此边界下进行事实分析、攻击路径梳理、风险判断、漏洞证明材料整理和报告撰写；不要编造事实，并明确区分已确认、待验证和推测性结论。
+> This project is an authorized security test, an internal security review, or validation of a lab you own. The target may be reachable from the public internet, but it is private use of a public address, an internal system, or an explicitly authorized test scope. Do not treat it as an unauthorized third-party target by default. Inside that boundary, analyze facts, map attack paths, judge risk, organize proof, and write the report. Do not invent facts. Keep confirmed, unverified, and speculative conclusions distinct. Write in English.
 
 ---
 
-## 8. 使用建议
+## 8. How to keep this file useful
 
-- 这份文件尽量保持稳定，作为统一“授权边界基线”
-- 每个项目只补充第 6 节字段
-- 不要把项目特有的漏洞细节长期写进本文件
-- 如果后续要做系统内自动注入，可以直接把本文件拆成结构化配置
+- Keep this file stable. It is the shared authorization baseline
+- Add only the section 6 fields on each project
+- Do not store project-specific vulnerability detail in this file
+- If this text is later injected automatically, split it into structured configuration

@@ -45,36 +45,36 @@ def _hint(content: str) -> dict[str, str]:
 BUILTIN_TEMPLATES: list[dict] = [
     {
         "id": "builtin-web-app",
-        "title": "Web 应用评估",
-        "origin": "目标 Web 应用，地址为 [URL]，技术栈为 [technology stack]",
-        "goal": "识别并记录 Web 应用中所有可利用的漏洞",
+        "title": "Web application assessment",
+        "origin": "Target web application at [URL], technology stack [technology stack]",
+        "goal": "Identify and record exploitable vulnerabilities in the web application",
         "hints": [
             _hint(
-                "从侦察开始：枚举子域名、目录和所用技术"
+                "Start with reconnaissance: enumerate subdomains, directories, and technologies"
             ),
-            _hint("测试身份认证机制是否存在绕过漏洞"),
-            _hint("检查所有用户输入是否存在注入点"),
+            _hint("Test whether authentication can be bypassed"),
+            _hint("Check user input for injection points"),
         ],
         "is_builtin": True,
         "user_id": None,
     },
     {
         "id": "builtin-internal-network",
-        "title": "内网渗透测试",
-        "origin": "可从假定已突破的立足点访问的内网网段 [CIDR]",
-        "goal": "实现域控制权获取，并记录横向移动和权限提升路径",
+        "title": "Internal network assessment",
+        "origin": "Internal network [CIDR] reachable from an assumed foothold",
+        "goal": "Reach domain control and record lateral movement and privilege escalation",
         "hints": [
             _hint(
-                "枚举内网网段中的存活主机和服务"
+                "Enumerate live hosts and services on the internal segment"
             ),
             _hint(
-                "识别 Active Directory 资产：域控制器、用户和用户组"
+                "Identify Active Directory assets: domain controllers, users, and groups"
             ),
             _hint(
-                "在共享、脚本和服务配置中搜寻凭据"
+                "Search shares, scripts, and service configuration for credentials"
             ),
             _hint(
-                "梳理通往域管理员的横向移动和权限提升路径"
+                "Map lateral movement and privilege escalation toward domain admin"
             ),
         ],
         "is_builtin": True,
@@ -82,21 +82,21 @@ BUILTIN_TEMPLATES: list[dict] = [
     },
     {
         "id": "builtin-external-network",
-        "title": "外网渗透测试",
-        "origin": "[organization] 面向互联网的资产：在范围内的 IP 段和域名",
-        "goal": "发现并利用对外暴露的服务，以获得初始立足点",
+        "title": "External network assessment",
+        "origin": "[organization] internet-facing assets: in-scope IP ranges and domains",
+        "goal": "Find and verify exposed services to gain an initial foothold",
         "hints": [
             _hint(
-                "枚举外部攻击面：开放端口、服务和暴露的应用"
+                "Enumerate the external attack surface: open ports, services, and exposed applications"
             ),
             _hint(
-                "识别服务版本指纹，并检查是否存在已知可利用的漏洞"
+                "Fingerprint service versions and check for known exploitable weaknesses"
             ),
             _hint(
-                "测试暴露的登录入口是否使用弱口令或默认凭据"
+                "Test exposed logins for weak or default credentials"
             ),
             _hint(
-                "检查 TLS 配置和证书是否存在错误配置"
+                "Check TLS configuration and certificates for misconfiguration"
             ),
         ],
         "is_builtin": True,
@@ -104,13 +104,13 @@ BUILTIN_TEMPLATES: list[dict] = [
     },
     {
         "id": "builtin-ctf",
-        "title": "CTF 挑战",
-        "origin": "CTF 挑战目标，地址为 [host:port]，类别为 [web/pwn/crypto/forensics]",
-        "goal": "解出挑战并取得 flag",
+        "title": "CTF challenge",
+        "origin": "CTF target at [host:port], category [web/pwn/crypto/forensics]",
+        "goal": "Solve the challenge and capture the flag",
         "hints": [
-            _hint("确定挑战类别，并收集所有提供的文件或接口"),
-            _hint("针对该类别探测预期的漏洞类型"),
-            _hint("开发漏洞利用或解题方案并夺取 flag"),
+            _hint("Identify the challenge category and collect the provided files or endpoints"),
+            _hint("Probe for the weakness class expected in that category"),
+            _hint("Develop a verification or solution and capture the flag"),
         ],
         "is_builtin": True,
         "user_id": None,

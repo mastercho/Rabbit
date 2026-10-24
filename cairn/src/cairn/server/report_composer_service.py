@@ -100,33 +100,33 @@ def compose_vulnerability_report(
 def render_narrative_markdown(report: VulnerabilityNarrativeReport) -> list[str]:
     """Render one composed vulnerability report as Markdown lines."""
     lines = [
-        "#### 漏洞概述",
+        "#### Summary",
         "",
         report.executive_summary,
         "",
     ]
 
     if report.attack_surface:
-        lines.extend(["#### 攻击面", ""])
+        lines.extend(["#### Attack surface", ""])
         for item in report.attack_surface:
             lines.append(f"- {item}")
         lines.append("")
 
-    lines.extend(["#### 漏洞证明", "", report.vulnerability_proof, ""])
+    lines.extend(["#### Proof", "", report.vulnerability_proof, ""])
 
     if report.proof_points:
-        lines.extend(["##### 证明要点", ""])
+        lines.extend(["##### Proof points", ""])
         for point in report.proof_points:
-            lines.append(f"- **{point.label}**：{point.content}")
+            lines.append(f"- **{point.label}**: {point.content}")
         lines.append("")
 
     lines.extend(
         [
-            "#### 影响结论",
+            "#### Impact",
             "",
             report.impact,
             "",
-            "#### 成因分析",
+            "#### Root cause",
             "",
             report.root_cause,
             "",
@@ -134,19 +134,19 @@ def render_narrative_markdown(report: VulnerabilityNarrativeReport) -> list[str]
     )
 
     if report.evidence_highlights:
-        lines.extend(["#### 关键证据", ""])
+        lines.extend(["#### Key evidence", ""])
         for item in report.evidence_highlights:
             lines.append(f"- {item}")
         lines.append("")
 
     if report.remediation:
-        lines.extend(["#### 修复建议", ""])
+        lines.extend(["#### Remediation", ""])
         for item in report.remediation:
             lines.append(f"- {item}")
         lines.append("")
 
     if report.operator_notes:
-        lines.extend(["#### 说明", ""])
+        lines.extend(["#### Notes", ""])
         for item in report.operator_notes:
             lines.append(f"- {item}")
         lines.append("")
@@ -157,36 +157,36 @@ def render_narrative_markdown(report: VulnerabilityNarrativeReport) -> list[str]
 def render_narrative_plain_lines(report: VulnerabilityNarrativeReport) -> list[str]:
     """Render one composed vulnerability report as wrapped plain-text lines."""
     lines = [
-        "漏洞概述：",
+        "Summary:",
         report.executive_summary,
         "",
     ]
     if report.attack_surface:
-        lines.append("攻击面：")
+        lines.append("Attack surface:")
         for item in report.attack_surface:
             lines.append(f"- {item}")
         lines.append("")
 
-    lines.extend(["漏洞证明：", report.vulnerability_proof, ""])
+    lines.extend(["Proof:", report.vulnerability_proof, ""])
     if report.proof_points:
-        lines.append("证明要点：")
+        lines.append("Proof points:")
         for point in report.proof_points:
-            lines.append(f"- {point.label}：{point.content}")
+            lines.append(f"- {point.label}: {point.content}")
         lines.append("")
 
-    lines.extend(["影响结论：", report.impact, "", "成因分析：", report.root_cause, ""])
+    lines.extend(["Impact:", report.impact, "", "Root cause:", report.root_cause, ""])
     if report.evidence_highlights:
-        lines.append("关键证据：")
+        lines.append("Key evidence:")
         for item in report.evidence_highlights:
             lines.append(f"- {item}")
         lines.append("")
     if report.remediation:
-        lines.append("修复建议：")
+        lines.append("Remediation:")
         for item in report.remediation:
             lines.append(f"- {item}")
         lines.append("")
     if report.operator_notes:
-        lines.append("说明：")
+        lines.append("Notes:")
         for item in report.operator_notes:
             lines.append(f"- {item}")
     return lines
@@ -242,18 +242,18 @@ def _build_template_report(
     enrichment_proof = str(enrichment.get("proof") or "").strip()
     if enrichment_proof:
         proof_points.insert(
-            0, VulnerabilityProofPoint(label="证明依据", content=_first_line(enrichment_proof, 220))
+            0, VulnerabilityProofPoint(label="Evidence", content=_first_line(enrichment_proof, 220))
         )
     for point in _verification_evidence(vulnerability, context, observed):
         if not any(existing.label == point.label and existing.content == point.content for existing in proof_points):
             proof_points.append(point)
     attack_surface = _attack_surface(front_entry, backend_entry, param_names, context.origin)
     if location_hint:
-        attack_surface.insert(0, f"位置：{_first_line(location_hint, 160)}")
+        attack_surface.insert(0, f"Location: {_first_line(location_hint, 160)}")
     evidence_highlights = _evidence_highlights(vulnerability, context)
     remediation = _string_list(enrichment.get("remediation") or []) or _remediation(vuln_type)
     severity_label = _severity_label(vulnerability.severity)
-    source_label = "已忽略" if vulnerability.status == "ignored" else "已确认"
+    source_label = "ignored" if vulnerability.status == "ignored" else "confirmed"
     executive_summary = _result_summary(
         vulnerability=vulnerability,
         context=context,
@@ -275,12 +275,12 @@ def _build_template_report(
         root_cause=root_cause,
     )
     notes = [
-        "该报告仅基于当前项目内已确认漏洞、关联事实、证明数据包与过程记录整理。",
+        "This report uses only confirmed findings, linked facts, proof packets, and process records in the current project.",
     ]
     if any(packet.get("note") for packet in vulnerability.proof_packets or []):
-        notes.append("部分请求/响应数据包来自事实重构，不是原始抓包，复测时应以真实流量覆盖。")
+        notes.append("Some request/response packets were reconstructed from facts, not captured raw. Replace them with real traffic on retest.")
     if context.goal:
-        notes.append(f"项目目标：{_first_line(context.goal, 140)}")
+        notes.append(f"Project goal: {_first_line(context.goal, 140)}")
 
     return VulnerabilityNarrativeReport(
         vulnerability_id=vulnerability.id,
@@ -313,31 +313,31 @@ def _compose_with_model(
 ) -> VulnerabilityNarrativeReport | None:
     prompt_payload = _model_prompt_payload(vulnerability, context, fallback)
     system = (
-        "你是渗透测试报告整理助手, 服务于授权安全测试/CTF 靶场场景。"
-        " 用户只想要一份能照着复现漏洞的简洁报告, 不要套话、不要复述过程事实。"
-        " 严格只使用输入中已经出现的证据, 不得编造接口、参数、URL、响应内容或因果链。"
-        " 返回一个 JSON 对象, 不要加 Markdown 代码块, 不要输出额外说明。"
+        "You write penetration-test reports for authorized security tests and CTF labs. "
+        "The user wants a short report that can be followed to reproduce the issue. Do not add filler or retell process facts. "
+        "Use only evidence that already appears in the input. Do not invent endpoints, parameters, URLs, response bodies, or causal chains. "
+        "Write in English. Return one JSON object. Do not wrap it in a Markdown code fence and do not add extra commentary."
     )
     user = (
-        "基于下面的已确认漏洞材料, 生成一份可复现的漏洞报告。"
-        " 只能返回这些字段："
-        ' executive_summary (字符串: 一行结果摘要, 写明攻击点/权限/验证URL), '
-        ' vulnerability_proof (字符串: 复现步骤, 用 1. 2. 3. 编号, 每步一个动作, 要具体到入口/payload/URL), '
-        ' proof_points (对象数组, 每个含 label 和 content: 一条验证证据, content 写"动作 → 返回内容"), '
-        ' attack_surface (字符串数组: 入口/命中接口/关键参数, 只列真实出现过的), '
-        ' impact (字符串: 一句影响结论), '
-        ' root_cause (字符串: 一句根因), '
-        ' remediation (字符串数组: 修复建议, 1-3条), '
-        ' operator_notes (字符串数组: 复测注意事项). '
-        ' exploit_script (字符串: 仅当漏洞类型属于"命令注入/RCE/文件上传/SQL注入/反序列化"等'
-        '有明确攻击动作的漏洞时才生成; 信息泄露/未授权访问/路径穿越/XSS/SSRF 等只靠验证步骤即可复现的, '
-        '返回空字符串不生成脚本). '
-        '当生成脚本时, 用 ```python 代码块包裹, 含: (1) 顶部注释写明用法, '
-        '(2) 用真实 payload/URL 构造攻击, (3) 提交并验证回显, (4) 打印预期输出. '
-        " 如果某个字段没有真实素材, 就返回空数组或空字符串, 不要编造。"
-        " executive_summary 不要写'已整理出报告草稿'这种话, 直接给结果。"
-        " vulnerability_proof 的步骤要具体: 访问哪个入口、构造什么 payload、提交到哪、访问哪个 URL 验证。"
-        "\n\n上下文：\n"
+        "Using the confirmed finding below, write a reproducible vulnerability report in English. "
+        "Return only these fields: "
+        "executive_summary (string: one result line naming the attack point, privilege, and verification URL), "
+        "vulnerability_proof (string: numbered steps 1. 2. 3., one action each, specific about entry, payload, and URL), "
+        "proof_points (array of {label, content}: one verification each, content as 'action -> returned content'), "
+        "attack_surface (string array: entry, endpoint, and key parameters that actually appeared), "
+        "impact (string: one impact sentence), "
+        "root_cause (string: one root-cause sentence), "
+        "remediation (string array: 1-3 fixes), "
+        "operator_notes (string array: retest notes). "
+        "exploit_script (string: only for command injection, RCE, file upload, SQL injection, or deserialization "
+        "when the input shows a concrete attack action. For information disclosure, broken access control, path traversal, XSS, or SSRF "
+        "that can be reproduced from the verification steps, return an empty string). "
+        "When you do write a script, wrap it in a ```python fence and include: (1) a usage comment, "
+        "(2) the real payload and URL, (3) submit and check the response, (4) print the expected output. "
+        "If a field has no real source material, return an empty array or empty string. Do not invent it. "
+        "executive_summary must state the result, not that a draft was prepared. "
+        "vulnerability_proof must say which entry was opened, what payload was built, where it was submitted, and which URL verified it."
+        "\n\nContext:\n"
         + json.dumps(prompt_payload, ensure_ascii=False, separators=(",", ":"))
     )
     # Single attempt: glm-5.x reasoning is slow (~200s for full reports),
@@ -387,7 +387,7 @@ def _compose_with_model(
         except Exception:
             continue
     LOG.warning(
-        "报告模型增强失败 回退模板 漏洞=%s 项目=%s", vulnerability.id, vulnerability.project_id
+        "Report model enhancement failed; using the template. vulnerability=%s project=%s", vulnerability.id, vulnerability.project_id
     )
     return None
 
@@ -401,7 +401,7 @@ def _request_model_json(
 ) -> str | None:
     if profile.provider_api != "openai-completions":
         if raise_errors:
-            raise RuntimeError(f"报告 Agent 不支持当前接口类型：{profile.provider_api}")
+            raise RuntimeError(f"Report agent does not support provider API {profile.provider_api}")
         return None
     endpoint = profile.base_url.rstrip("/")
     if not endpoint.endswith("/chat/completions"):
@@ -434,23 +434,23 @@ def _request_model_json(
         response.raise_for_status()
     except requests.HTTPError as exc:
         if raise_errors:
-            status = exc.response.status_code if exc.response is not None else "未知"
-            raise RuntimeError(f"报告 Agent 接口返回 HTTP {status}") from exc
+            status = exc.response.status_code if exc.response is not None else "unknown"
+            raise RuntimeError(f"Report agent API returned HTTP {status}") from exc
         return None
     except requests.RequestException as exc:
         if raise_errors:
-            raise RuntimeError(f"报告 Agent 接口连接失败：{exc.__class__.__name__}") from exc
+            raise RuntimeError(f"Report agent connection failed: {exc.__class__.__name__}") from exc
         return None
     except Exception as exc:
         if raise_errors:
-            raise RuntimeError(f"报告 Agent 调用失败：{exc.__class__.__name__}") from exc
+            raise RuntimeError(f"Report agent call failed: {exc.__class__.__name__}") from exc
         return None
 
     try:
         body = response.json()
     except ValueError as exc:
         if raise_errors:
-            raise RuntimeError("报告 Agent 接口返回的不是有效 JSON") from exc
+            raise RuntimeError("Report agent API did not return valid JSON") from exc
         return None
 
     # Parse the OpenAI-style chat completion response. This previously lived
@@ -463,13 +463,13 @@ def _request_model_json(
         content = message.get("content")
     except Exception as exc:
         if raise_errors:
-            raise RuntimeError("报告 Agent 响应缺少有效的 choices/message 结构") from exc
+            raise RuntimeError("Report agent response has no choices/message structure") from exc
         return None
 
     if isinstance(content, str):
         result = content.strip() or None
         if result is None and raise_errors:
-            raise RuntimeError("报告 Agent 返回内容为空")
+            raise RuntimeError("Report agent returned empty content")
         return result
     if isinstance(content, list):
         parts: list[str] = []
@@ -478,10 +478,10 @@ def _request_model_json(
                 parts.append(item["text"])
         text = "\n".join(parts).strip()
         if not text and raise_errors:
-            raise RuntimeError("报告 Agent 返回内容为空")
+            raise RuntimeError("Report agent returned empty content")
         return text or None
     if raise_errors:
-        raise RuntimeError("报告 Agent 返回了不支持的内容格式")
+        raise RuntimeError("Report agent returned an unsupported content format")
     return None
 
 
@@ -512,7 +512,7 @@ def _model_prompt_payload(
             "evidence_highlights": _evidence_highlights(vulnerability, context)[:3],
             "process_highlights": [
                 {
-                    "label": str(step.get("label") or step.get("type") or step.get("id") or "过程"),
+                    "label": str(step.get("label") or step.get("type") or step.get("id") or "step"),
                     "worker": str(step.get("worker") or "").strip() or None,
                     "description": _trim(str(step.get("description") or ""), 120),
                 }
@@ -521,7 +521,7 @@ def _model_prompt_payload(
             ],
             "proof_packets": [
                 {
-                    "title": _trim(str(packet.get("title") or f"证明 {index + 1}"), 80),
+                    "title": _trim(str(packet.get("title") or f"Proof {index + 1}"), 80),
                     "request_target": _trim(_request_target(packet), 140),
                     "response": _trim(_first_line(str(packet.get("response") or ""), 160), 160),
                     "note": _trim(str(packet.get("note") or ""), 100),
@@ -681,23 +681,23 @@ def _full_text(vulnerability: Vulnerability, context: _ReportContext) -> str:
 
 def _classify_vulnerability(text: str) -> str:
     rules = (
-        ("命令注入", (r"命令注入", r"command injection", r"shell=true", r"subprocess", r"randomstring")),
-        ("SQL 注入", (r"sql 注入", r"sql injection", r"\bsqli\b")),
-        ("反序列化", (r"反序列化", r"deseriali[sz]ation", r"\bphar\b", r"\bserialize\b")),
-        ("文件上传", (r"文件上传", r"upload", r"\.phar\b", r"multipart/form-data")),
-        ("路径穿越/任意文件读取", (r"路径穿越", r"path traversal", r"directory traversal", r"任意文件读取", r"\.\./")),
-        ("未授权访问/越权", (r"未授权", r"越权", r"idor", r"authentication bypass", r"鉴权缺失")),
+        ("Command injection", (r"命令注入", r"command injection", r"shell=true", r"subprocess", r"randomstring")),
+        ("SQL injection", (r"sql 注入", r"sql injection", r"\bsqli\b")),
+        ("Deserialization", (r"反序列化", r"deseriali[sz]ation", r"\bphar\b", r"\bserialize\b")),
+        ("File upload", (r"文件上传", r"upload", r"\.phar\b", r"multipart/form-data")),
+        ("Path traversal", (r"路径穿越", r"path traversal", r"directory traversal", r"任意文件读取", r"\.\./")),
+        ("Broken access control", (r"未授权", r"越权", r"idor", r"authentication bypass", r"鉴权缺失")),
         ("SSRF", (r"\bssrf\b", r"server-side request forgery")),
         ("XXE", (r"\bxxe\b", r"xml external entity")),
-        ("跨站脚本", (r"\bxss\b", r"跨站脚本", r"script 注入")),
-        ("信息泄露", (r"信息泄露", r"information disclosure", r"泄露", r"直接返回")),
-        ("远程代码执行", (r"\brce\b", r"远程代码执行", r"远程命令执行")),
+        ("Cross-site scripting", (r"\bxss\b", r"跨站脚本", r"script 注入")),
+        ("Information disclosure", (r"信息泄露", r"information disclosure", r"泄露", r"直接返回")),
+        ("Remote code execution", (r"\brce\b", r"远程代码执行", r"远程命令执行")),
     )
     lowered = text.lower()
     for label, patterns in rules:
         if any(re.search(pattern, lowered, re.IGNORECASE) for pattern in patterns):
             return label
-    return "通用安全缺陷"
+    return "General security weakness"
 
 
 def _entry_points(
@@ -746,13 +746,13 @@ def _attack_surface(
 ) -> list[str]:
     items: list[str] = []
     if front_entry:
-        items.append(f"前台入口：{front_entry}")
+        items.append(f"Entry: {front_entry}")
     if backend_entry:
-        items.append(f"命中接口：{backend_entry}")
+        items.append(f"Endpoint: {backend_entry}")
     if param_names:
-        items.append(f"关键参数：{', '.join(param_names[:6])}")
+        items.append(f"Key parameters: {', '.join(param_names[:6])}")
     if origin:
-        items.append(f"目标起点：{_first_line(origin, 160)}")
+        items.append(f"Origin: {_first_line(origin, 160)}")
     return _unique(items)
 
 
@@ -775,7 +775,7 @@ def _result_summary(
     text = f"{vulnerability.description}\n{observed}\n" + "\n".join(
         d for _id, d in context.related_facts
     ) + "\n" + "\n".join(vulnerability.evidence or [])
-    perm = "未明确"
+    perm = "not identified"
     m = re.search(r"uid=\d+\((?:root|www-data|daemon|nobody)\)", text)
     if m:
         perm = m.group(0)
@@ -801,13 +801,13 @@ def _result_summary(
             verify_candidates[0],
         )
     bits = [
-        f"攻击点: {attack_point}",
-        f"严重度: {severity_label} ({vuln_type})",
-        f"权限: {perm}",
+        f"Attack point: {attack_point}",
+        f"Severity: {severity_label} ({vuln_type})",
+        f"Privilege: {perm}",
     ]
     if verify_url:
-        bits.append(f"验证 URL: {verify_url}")
-    bits.append(f"状态: {source_label}")
+        bits.append(f"Verification URL: {verify_url}")
+    bits.append(f"Status: {source_label}")
     return " | ".join(bits)
 
 
@@ -828,9 +828,9 @@ def _attack_chain_steps(
     # 步骤1: 入口
     entry = backend_entry or front_entry
     if entry:
-        steps.append(f"访问入口 {entry}")
+        steps.append(f"Open {entry}")
     if param_names:
-        steps.append(f"定位关键参数：{', '.join(param_names[:6])}")
+        steps.append(f"Key parameters: {', '.join(param_names[:6])}")
     # 步骤2: 从 fact 里抓 payload (文件名/参数值含 shell 元字符)
     payloads = re.findall(
         r"[`'\"]?([A-Za-z0-9_./-]*[;|>`$][^'\"\s,；,)）]{0,80})[`'\"]?",
@@ -850,10 +850,10 @@ def _attack_chain_steps(
         p_clean = p.strip("'\"`")
         if p_clean and p_clean not in seen_p:
             seen_p.add(p_clean)
-            steps.append(f"构造 payload: {p_clean}")
+            steps.append(f"Build payload: {p_clean}")
     # 步骤3: 上传/提交动作
     if re.search(r"POST|上传|提交|multipart", text, re.IGNORECASE):
-        steps.append(f"POST 提交到 {entry or '目标接口'}")
+        steps.append(f"POST to {entry or 'the target endpoint'}")
     # 步骤4: 验证
     verify_urls = []
     for url_m in re.finditer(r"https?://[^\s,；,)）]+(?:\.txt|\.php|/output/[^\s,；,)）]+)", text):
@@ -863,7 +863,7 @@ def _attack_chain_steps(
             if url not in verify_urls:
                 verify_urls.append(url)
     for url in verify_urls[:2]:
-        steps.append(f"GET {url} 验证回显")
+        steps.append(f"GET {url} and check the response")
     if not steps:
         # fallback: 至少给出 root_cause
         steps.append(root_cause)
@@ -886,7 +886,7 @@ def _verification_evidence(
             continue
         # 找带成功信号的 response
         if re.search(r"uid=|www-data|root|PWNED|ifconfig|200|成功|返回", response, re.IGNORECASE):
-            title = packet.get("title") or "验证"
+            title = packet.get("title") or "Verification"
             # 响应内容取首行 + 关键片段
             head = response.split("\n")[0][:160]
             points.append(VulnerabilityProofPoint(label=title, content=head))
@@ -900,12 +900,12 @@ def _verification_evidence(
         url = m.group(1).rstrip(".;")
         signal = m.group(2)
         if not any(url in p.content for p in points):
-            points.append(VulnerabilityProofPoint(label="HTTP 验证", content=f"{url} → {signal}"))
+            points.append(VulnerabilityProofPoint(label="HTTP verification", content=f"{url} → {signal}"))
         if len(points) >= 4:
             break
     # 3. 兜底: 用 observed
     if not points and observed:
-        points.append(VulnerabilityProofPoint(label="可观测结果", content=observed))
+        points.append(VulnerabilityProofPoint(label="Observed result", content=observed))
     return points
 
 
@@ -920,14 +920,14 @@ def _proof_points(
 ) -> list[VulnerabilityProofPoint]:
     points: list[VulnerabilityProofPoint] = []
     if front_entry:
-        points.append(VulnerabilityProofPoint(label="前台入口", content=front_entry))
+        points.append(VulnerabilityProofPoint(label="Entry", content=front_entry))
     if backend_entry:
-        points.append(VulnerabilityProofPoint(label="命中接口", content=backend_entry))
+        points.append(VulnerabilityProofPoint(label="Endpoint", content=backend_entry))
     if param_names:
-        points.append(VulnerabilityProofPoint(label="关键参数", content="、".join(param_names[:6])))
-    points.append(VulnerabilityProofPoint(label="危险逻辑", content=root_cause))
-    points.append(VulnerabilityProofPoint(label="可观测结果", content=observed))
-    points.append(VulnerabilityProofPoint(label="影响结论", content=impact))
+        points.append(VulnerabilityProofPoint(label="Key parameters", content=", ".join(param_names[:6])))
+    points.append(VulnerabilityProofPoint(label="Dangerous logic", content=root_cause))
+    points.append(VulnerabilityProofPoint(label="Observed result", content=observed))
+    points.append(VulnerabilityProofPoint(label="Impact", content=impact))
     return points
 
 
@@ -943,44 +943,44 @@ def _proof_paragraph(
 ) -> str:
     route_bits = []
     if front_entry:
-        route_bits.append(f"前台入口位于 {front_entry}")
+        route_bits.append(f"the entry is {front_entry}")
     if backend_entry and backend_entry != front_entry:
-        route_bits.append(f"最终命中处理点 {backend_entry}")
-    param_text = f"关键输入集中在 {', '.join(param_names[:6])}" if param_names else "当前材料未完整记录参数名称"
+        route_bits.append(f"the handling point is {backend_entry}")
+    param_text = f"key input is {', '.join(param_names[:6])}" if param_names else "the material does not fully record parameter names"
     return (
-        f"本次{vuln_type}报告基于现有事实整理出的主证明链为："
-        f"{'，'.join(route_bits) if route_bits else '已确认存在可达入口'}，{param_text}。"
-        f"从已记录证据看，{root_cause}，因此系统表现出了“{observed}”这一可观测结果，"
-        f"据此可以支撑“{impact}”的风险结论。"
+        f"The main proof chain for this {vuln_type} report is: "
+        f"{', '.join(route_bits) if route_bits else 'a reachable entry is confirmed'}, {param_text}. "
+        f"Recorded evidence shows that {root_cause}, so the system produced this observable result: \"{observed}\". "
+        f"That supports this impact: \"{impact}\"."
     )
 
 
 def _root_cause(vuln_type: str, text: str) -> str:
-    if vuln_type == "命令注入":
+    if vuln_type == "Command injection":
         if re.search(r"shell\s*=\s*true|subprocess", text, re.IGNORECASE):
-            return "服务端将外部可控内容拼接进 shell 命令执行链，且没有完成命令边界隔离"
-        return "服务端在命令执行链路中直接消费了外部输入，缺少严格的参数隔离与白名单约束"
-    if vuln_type == "SQL 注入":
-        return "服务端在数据库查询链路中对外部输入缺少参数化处理或等价的安全绑定"
-    if vuln_type == "反序列化":
-        return "服务端对不可信序列化数据执行了解析/反序列化，缺少对象类型和来源约束"
-    if vuln_type == "文件上传":
-        return "上传链路的文件类型、解析范围或落地位置约束不足，导致不安全文件进入后续处理流程"
-    if vuln_type == "路径穿越/任意文件读取":
-        return "路径规范化或目录边界校验不足，外部输入可以突破预期访问目录"
-    if vuln_type == "未授权访问/越权":
-        return "接口缺少有效的身份校验或对象级授权检查，导致非授权主体可直接访问目标资源"
+            return "The server concatenates attacker-controlled input into a shell command without isolating the command boundary"
+        return "The server passes external input into a command execution path without strict parameter isolation or an allowlist"
+    if vuln_type == "SQL injection":
+        return "The server builds a database query from external input without parameterization or an equivalent binding"
+    if vuln_type == "Deserialization":
+        return "The server deserializes untrusted data without restricting object types or origin"
+    if vuln_type == "File upload":
+        return "Upload type, parsing scope, or storage location checks are too weak, so an unsafe file reaches later processing"
+    if vuln_type == "Path traversal":
+        return "Path normalization or directory boundaries are insufficient, so external input can leave the intended directory"
+    if vuln_type == "Broken access control":
+        return "The endpoint lacks effective authentication or object-level authorization, so an unauthorized caller can reach the resource"
     if vuln_type == "SSRF":
-        return "服务端发起对外请求时未限制可访问目标、协议或地址段"
+        return "The server sends outbound requests without restricting target, protocol, or address range"
     if vuln_type == "XXE":
-        return "XML 解析配置允许外部实体解析，且输入源未被安全限制"
-    if vuln_type == "跨站脚本":
-        return "输出链路对可控内容缺少上下文相关的编码和过滤"
-    if vuln_type == "信息泄露":
-        return "敏感资源或内部状态被直接暴露到可访问接口，缺少最小暴露控制"
-    if vuln_type == "远程代码执行":
-        return "服务端关键执行链路对可控输入缺少足够约束，最终触发了代码或命令执行能力"
-    return "关键处理链路对外部输入缺少足够约束，导致安全边界被突破"
+        return "The XML parser allows external entities and the input source is not restricted"
+    if vuln_type == "Cross-site scripting":
+        return "Output of controllable content is missing context-specific encoding and filtering"
+    if vuln_type == "Information disclosure":
+        return "A sensitive resource or internal state is exposed on an accessible endpoint without least-exposure controls"
+    if vuln_type == "Remote code execution":
+        return "A server execution path does not constrain controllable input and can run code or commands"
+    return "A critical processing path does not constrain external input, so a security boundary is crossed"
 
 
 def _impact_statement(
@@ -991,18 +991,18 @@ def _impact_statement(
     evidence_blob = "\n".join(vulnerability.evidence or [])
     text = f"{vulnerability.title}\n{vulnerability.description}\n{observed}\n{evidence_blob}"
     if re.search(r"\buid=0\b|whoami.*root|root\s*权限", text, re.IGNORECASE):
-        return "攻击者可借此获得系统级命令执行能力，并可能进一步取得高权限控制"
+        return "An attacker can gain system-level command execution and may be able to take higher-privileged control"
     if re.search(r"www-data|whoami.*www-data|interactive shell", text, re.IGNORECASE):
-        return "攻击者可借此取得 Web 进程上下文的命令执行能力，并继续向系统权限扩展"
-    if vuln_type in {"路径穿越/任意文件读取", "未授权访问/越权", "信息泄露"}:
-        return "攻击者可在未授权条件下读取他人结果、内部文件或敏感业务数据"
-    if vuln_type == "SQL 注入":
-        return "攻击者可突破正常数据访问边界，读取、篡改或进一步影响后端数据库数据"
-    if vuln_type == "文件上传":
-        return "攻击者可借上传链路将不安全文件带入服务器侧处理流程，进一步引发代码执行或文件落地风险"
-    if vuln_type in {"命令注入", "远程代码执行", "反序列化"}:
-        return "攻击者可将外部输入推进到服务端执行链路，形成对主机或应用的高危控制风险"
-    return f"该问题已经对目标系统造成可验证的安全暴露，当前可观测结果为：{observed}"
+        return "An attacker can execute commands as the web process and continue toward system privileges"
+    if vuln_type in {"Path traversal", "Broken access control", "Information disclosure"}:
+        return "An attacker can read another user's results, internal files, or sensitive business data without authorization"
+    if vuln_type == "SQL injection":
+        return "An attacker can cross the normal data-access boundary and read, modify, or otherwise affect database data"
+    if vuln_type == "File upload":
+        return "An attacker can bring an unsafe file into server-side processing and may reach code execution or file write"
+    if vuln_type in {"Command injection", "Remote code execution", "Deserialization"}:
+        return "An attacker can push external input into a server execution path and gain high-impact control of the host or application"
+    return f"This issue creates a verifiable exposure. Observed result: {observed}"
 
 
 def _observed_result(vulnerability: Vulnerability, context: _ReportContext) -> str:
@@ -1023,7 +1023,7 @@ def _observed_result(vulnerability: Vulnerability, context: _ReportContext) -> s
             re.IGNORECASE,
         )
     ]
-    source = positive[0] if positive else (candidates[0] if candidates else "当前材料未记录稳定的回显内容")
+    source = positive[0] if positive else (candidates[0] if candidates else "The material does not record a stable response")
     return _first_line(source, 220)
 
 
@@ -1123,68 +1123,68 @@ def _evidence_highlights(
 
 def _remediation(vuln_type: str) -> list[str]:
     mapping = {
-        "命令注入": [
-            "禁止将外部输入直接拼接到 shell 命令中，改用参数化执行接口并关闭 shell=True 类模式。",
-            "对涉及命令、脚本、任务名和路径的输入建立严格白名单，并在服务端完成边界校验。",
-            "为高风险执行链增加审计日志和最小权限隔离，避免 Web 进程直接拥有高价值系统能力。",
+        "Command injection": [
+            "Do not concatenate external input into a shell command. Use a parameterized execution API and disable shell=True.",
+            "Allowlist commands, scripts, task names, and paths, and enforce the boundary on the server.",
+            "Add audit logs and least privilege on high-risk execution paths so the web process does not hold high-value system rights.",
         ],
-        "SQL 注入": [
-            "将动态 SQL 改为参数化查询或预编译语句，避免字符串拼接。",
-            "对查询条件和排序字段建立白名单，禁止将任意可控字段直接进入 SQL 语句。",
-            "补充数据库最小权限和异常审计，降低单点注入的横向影响面。",
+        "SQL injection": [
+            "Replace dynamic SQL with parameterized queries or prepared statements.",
+            "Allowlist query conditions and sort fields. Do not place arbitrary controllable fields into SQL.",
+            "Apply least database privilege and exception auditing to limit the blast radius of one injection.",
         ],
-        "反序列化": [
-            "禁止对不可信输入执行反序列化，优先改为安全的数据交换格式。",
-            "若业务必须解析复杂对象，应限制允许的类型集合并校验数据来源。",
-            "移除危险 gadget 依赖或在运行时关闭相关自动装载能力。",
+        "Deserialization": [
+            "Do not deserialize untrusted input. Prefer a safe data format.",
+            "If complex objects must be parsed, restrict the allowed types and verify the data source.",
+            "Remove dangerous gadget dependencies or disable automatic loading at runtime.",
         ],
-        "文件上传": [
-            "将上传链路改为后端重新命名与隔离存储，禁止用户可控文件名直接落地到解析目录。",
-            "在服务端同时校验 MIME、扩展名与内容签名，避免单点校验绕过。",
-            "对上传目录和后续处理程序做最小权限隔离，防止解析型文件被直接执行。",
+        "File upload": [
+            "Rename uploads on the server and store them outside the parser directory. Do not land a user-controlled filename in a parsed path.",
+            "Check MIME type, extension, and content signature together so one check cannot be bypassed.",
+            "Isolate the upload directory and the follow-on processor so a parsed file is not executed directly.",
         ],
-        "路径穿越/任意文件读取": [
-            "对访问路径做规范化并强制限制在预期目录内，拒绝包含目录跳转片段的输入。",
-            "服务端不要信任用户提交的相对路径、压缩包成员名或文件引用路径。",
-            "对可读资源增加对象级授权校验，避免跨用户或跨任务读取。",
+        "Path traversal": [
+            "Normalize access paths, confine them to the intended directory, and reject directory-traversal segments.",
+            "Do not trust user-supplied relative paths, archive member names, or file references.",
+            "Add object-level authorization on readable resources so one user or task cannot read another.",
         ],
-        "未授权访问/越权": [
-            "在接口入口补全身份鉴别与对象级授权检查，禁止仅依赖前端可见性控制。",
-            "对项目、任务、文件等资源的读取与下载增加属主校验。",
-            "为高价值接口建立未授权访问监控与访问频率告警。",
+        "Broken access control": [
+            "Require authentication and object-level authorization at the endpoint. Do not rely on hiding controls in the UI.",
+            "Check ownership before reading or downloading projects, tasks, files, and similar resources.",
+            "Monitor high-value endpoints for unauthorized access and unusual request rates.",
         ],
         "SSRF": [
-            "限制服务端可访问的协议、域名和地址段，阻断对内网与元数据地址的访问。",
-            "对用户提供的目标地址做解析后校验，避免 DNS 重绑定和协议绕过。",
-            "为外连请求增加最小权限网络出口策略和异常审计。",
+            "Restrict protocols, hostnames, and address ranges the server may contact, including internal and metadata addresses.",
+            "Validate the resolved target address to resist DNS rebinding and protocol bypasses.",
+            "Use a least-privilege egress policy and audit unusual outbound requests.",
         ],
         "XXE": [
-            "关闭 XML 解析器的外部实体、DTD 与网络加载能力。",
-            "若业务必须处理 XML，改用安全解析模式并限制可处理文档大小。",
-            "对上传或导入的 XML 内容增加格式校验与隔离处理。",
+            "Disable external entities, DTDs, and network loading in the XML parser.",
+            "If XML is required, use a safe parse mode and limit document size.",
+            "Validate and isolate uploaded or imported XML.",
         ],
-        "跨站脚本": [
-            "在输出位置按上下文做 HTML/属性/脚本级别编码，避免直接回显可控内容。",
-            "对富文本和模板变量建立统一过滤策略，并补充 CSP 等缓解措施。",
-            "对历史数据做一次性清理，避免已落库的恶意内容继续触发。",
+        "Cross-site scripting": [
+            "Encode output for the HTML, attribute, or script context instead of reflecting controllable content.",
+            "Use one filtering policy for rich text and template variables, and add a CSP.",
+            "Clean stored malicious content so it cannot keep firing.",
         ],
-        "信息泄露": [
-            "收紧对敏感接口、调试信息和内部状态页的访问控制，默认不对外暴露。",
-            "从响应中移除不必要的内部路径、版本、凭证线索和业务细节。",
-            "补充最小暴露原则和基于角色的访问控制，避免匿名访问敏感内容。",
+        "Information disclosure": [
+            "Restrict sensitive endpoints, debug output, and internal status pages. Do not expose them by default.",
+            "Remove unnecessary internal paths, versions, credential clues, and business details from responses.",
+            "Apply least exposure and role-based access so anonymous callers cannot read sensitive content.",
         ],
-        "远程代码执行": [
-            "从执行链路上移除对外部输入的直接控制能力，并对高危执行点做白名单约束。",
-            "对承载执行能力的组件实施最小权限与隔离运行，避免突破后直接影响主机。",
-            "增加进程级审计和异常行为检测，及时发现执行链路被触达的迹象。",
+        "Remote code execution": [
+            "Remove direct control of execution paths by external input, and allowlist the remaining high-risk execution points.",
+            "Run components that can execute code with least privilege and isolation so a break does not own the host.",
+            "Audit process creation and alert when an execution path is reached.",
         ],
     }
     return mapping.get(
         vuln_type,
         [
-            "梳理该漏洞命中的关键处理链路，明确外部输入进入点并补齐边界校验。",
-            "对相关接口增加最小权限控制、输入约束与异常审计，避免同类问题重复出现。",
-            "在修复后补充回归测试，确保同一攻击面不再出现等价绕过。",
+            "Trace the processing path this issue hits, identify where external input enters, and add a boundary check.",
+            "Add least privilege, input constraints, and exception auditing on the related endpoints.",
+            "Add a regression test after the fix so the same attack surface cannot be bypassed the same way.",
         ],
     )
 
@@ -1257,10 +1257,10 @@ def _unique(items: list[str]) -> list[str]:
 
 def _severity_label(severity: str) -> str:
     return {
-        "critical": "严重",
-        "high": "高危",
-        "medium": "中危",
-        "low": "低危",
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
     }.get(severity, severity)
 
 

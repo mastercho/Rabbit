@@ -61,17 +61,17 @@ def _fetch_dispatcher_snapshot() -> tuple[dict | None, str | None]:
     try:
         health = requests.get(_internal_url("/internal/health"), timeout=_status_timeout())
         if health.status_code != 200:
-            return None, f"调度器健康检查返回 {health.status_code}"
+            return None, f"Dispatcher health check returned {health.status_code}"
         response = requests.get(
             _internal_url("/internal/status"),
             timeout=_status_timeout(),
             **_internal_auth_kwargs(),
         )
         if response.status_code != 200:
-            return None, f"调度器状态接口返回 {response.status_code}"
+            return None, f"Dispatcher status returned {response.status_code}"
         payload = response.json()
         if not isinstance(payload, dict):
-            return None, "调度器状态响应格式异常"
+            return None, "Dispatcher status response was not valid"
         return payload, None
     except (requests.RequestException, ValueError) as exc:
         return None, str(exc)
@@ -142,8 +142,8 @@ def _idle_project_alerts(conn, threshold_hours: int) -> list[SettingsAlert]:
             alerts.append(
                 SettingsAlert(
                     level="warning",
-                    title=f"项目 {row['title']} 已长时间无进展",
-                    detail=f"{row['id']} 最近活动距今约 {idle_hours:.1f} 小时，超过阈值 {threshold_hours} 小时。",
+                    title=f"Project {row['title']} has been idle",
+                    detail=f"{row['id']} last activity was about {idle_hours:.1f} hours ago, past the {threshold_hours} hour threshold.",
                 )
             )
     return alerts
@@ -162,8 +162,8 @@ def update_settings(body: Settings) -> Settings:
     values = tuple(payload[key] for key in payload)
     with get_conn() as conn:
         conn.execute(f"UPDATE settings SET {assignments} WHERE rowid = 1", values)
-    record_audit("settings.update", "更新系统设置", detail=", ".join(f"{key}={value}" for key, value in payload.items()))
-    record_notification("系统设置已更新", level="success", body="新的调度、安全与保留策略已保存。")
+    record_audit("settings.update", "Updated system settings", detail=", ".join(f"{key}={value}" for key, value in payload.items()))
+    record_notification("System settings updated", level="success", body="The new dispatch, security, and retention policy was saved.")
     return body
 
 
@@ -188,19 +188,19 @@ def health() -> SettingsHealthResponse:
     checks.append(
         SettingsHealthCheck(
             key="server",
-            label="API 服务",
+            label="API",
             status="ok",
-            summary="产品服务运行正常",
-            detail="系统设置、项目和报告接口均由当前服务提供。",
+            summary="The product service is healthy",
+            detail="Settings, projects, and reports are served by this process.",
         )
     )
     checks.append(
         SettingsHealthCheck(
             key="database",
-            label="SQLite 数据库",
+            label="SQLite database",
             status="ok",
-            summary=f"项目 {stats.projects} / 漏洞 {stats.vulnerabilities}",
-            detail=f"用户 {stats.users}，审计日志 {stats.audit_entries}，导出记录 {stats.export_records}。",
+            summary=f"Projects {stats.projects} / vulnerabilities {stats.vulnerabilities}",
+            detail=f"Users {stats.users}, audit entries {stats.audit_entries}, export records {stats.export_records}.",
         )
     )
 
@@ -210,17 +210,17 @@ def health() -> SettingsHealthResponse:
         checks.append(
             SettingsHealthCheck(
                 key="dispatcher",
-                label="调度器联通性",
+                label="Dispatcher connectivity",
                 status="error" if stats.active_projects > 0 else "warning",
-                summary="调度器状态暂不可用",
-                detail=dispatcher_error or "无法连接到调度器内部状态接口。",
+                summary="Dispatcher status is unavailable",
+                detail=dispatcher_error or "Could not reach the dispatcher status API.",
             )
         )
         alerts.append(
             SettingsAlert(
                 level="danger" if stats.active_projects > 0 else "warning",
-                title="无法读取调度器状态",
-                detail=dispatcher_error or "工作节点测试、实时状态和健康联动暂不可用。",
+                title="Could not read dispatcher status",
+                detail=dispatcher_error or "Worker tests, live status, and health checks are unavailable.",
             )
         )
     else:
@@ -228,55 +228,55 @@ def health() -> SettingsHealthResponse:
         checks.append(
             SettingsHealthCheck(
                 key="dispatcher",
-                label="调度器联通性",
+                label="Dispatcher connectivity",
                 status="ok",
-                summary=f"轮询间隔 {runtime.get('interval', '-')}s，运行任务 {runtime.get('running_task_count', 0)}",
-                detail=f"最大并发 {runtime.get('max_workers', 0)}，运行项目 {runtime.get('running_project_count', 0)}。",
+                summary=f"Poll interval {runtime.get('interval', '-')}s, running tasks {runtime.get('running_task_count', 0)}",
+                detail=f"Max concurrency {runtime.get('max_workers', 0)}, running projects {runtime.get('running_project_count', 0)}.",
             )
         )
         worker_status = "ok" if worker_offline == 0 else "warning"
         checks.append(
             SettingsHealthCheck(
                 key="workers",
-                label="工作节点状态",
+                label="Worker status",
                 status=worker_status,
-                summary=f"在线 {worker_online} / 离线 {worker_offline} / 总数 {worker_total}",
-                detail="在线节点可继续接收任务；离线节点需要在工作节点页进一步排查。",
+                summary=f"Online {worker_online} / offline {worker_offline} / total {worker_total}",
+                detail="Online workers can take tasks. Offline workers need attention on the Workers page.",
             )
         )
         if stats.active_projects > 0 and worker_online == 0:
             alerts.append(
                 SettingsAlert(
                     level="danger",
-                    title="存在运行需求但没有在线 Worker",
-                    detail=f"当前有 {stats.active_projects} 个活动项目，但在线 Worker 为 0。",
+                    title="Work is waiting but no worker is online",
+                    detail=f"{stats.active_projects} projects are active, but no worker is online.",
                 )
             )
         elif worker_offline > 0:
             alerts.append(
                 SettingsAlert(
                     level="warning",
-                    title="部分 Worker 处于离线状态",
-                    detail=f"当前在线 {worker_online} 个，离线 {worker_offline} 个。",
+                    title="Some workers are offline",
+                    detail=f"{worker_online} online, {worker_offline} offline.",
                 )
             )
 
     checks.append(
         SettingsHealthCheck(
             key="auth",
-            label="认证策略",
+            label="Authentication policy",
             status="ok",
-            summary=f"{settings.max_failed_login_attempts} 次失败 / {settings.rate_limit_window_minutes} 分钟窗口",
-            detail=f"Session {settings.session_duration_hours} 小时，验证码始终开启。",
+            summary=f"{settings.max_failed_login_attempts} failures / {settings.rate_limit_window_minutes} minute window",
+            detail=f"Sessions last {settings.session_duration_hours} hours. Captcha is always on.",
         )
     )
     checks.append(
         SettingsHealthCheck(
             key="retention",
-            label="保留与清理策略",
+            label="Retention and cleanup",
             status="ok",
-            summary=f"日志 {settings.log_retention_days} 天，导出 {settings.export_retention_days} 天",
-            detail=f"通知保留 {settings.notification_retention_days} 天，项目无进展告警阈值 {settings.project_idle_alert_hours} 小时。",
+            summary=f"Logs {settings.log_retention_days} days, exports {settings.export_retention_days} days",
+            detail=f"Notifications are kept {settings.notification_retention_days} days. Idle-project alert threshold is {settings.project_idle_alert_hours} hours.",
         )
     )
 
@@ -334,9 +334,9 @@ def cleanup() -> SettingsCleanupResult:
         }
 
     total_deleted = sum(int(value or 0) for value in deleted.values())
-    summary = f"本次共清理 {total_deleted} 条历史数据。"
+    summary = f"Removed {total_deleted} expired history records."
     record_audit("settings.cleanup", summary, detail=", ".join(f"{key}={value}" for key, value in deleted.items()))
-    record_notification("系统清理已完成", level="info", body=summary)
+    record_notification("Cleanup finished", level="info", body=summary)
     return SettingsCleanupResult(
         ran_at=now.isoformat(),
         deleted={key: int(value or 0) for key, value in deleted.items()},

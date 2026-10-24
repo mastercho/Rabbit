@@ -40,12 +40,12 @@ export function buildFactGraph(detail) {
   for (const goal of detail.goals || []) {
     nodes.push(factNode(goal, "goal"));
     if (goal.parent_goal_id) {
-      edges.push({ data: { id: `goal:${goal.parent_goal_id}:${goal.id}`, source: goal.parent_goal_id, target: goal.id, status: "goal_child", label: "子目标" } });
+      edges.push({ data: { id: `goal:${goal.parent_goal_id}:${goal.id}`, source: goal.parent_goal_id, target: goal.id, status: "goal_child", label: "Subgoal" } });
     } else {
-      edges.push({ data: { id: `goal-origin:${goal.id}`, source: "origin", target: goal.id, status: "goal_evidence", label: "目标" } });
+      edges.push({ data: { id: `goal-origin:${goal.id}`, source: "origin", target: goal.id, status: "goal_evidence", label: "Goal" } });
     }
     for (const factId of goal.from || []) {
-      edges.push({ data: { id: `goal-evidence:${factId}:${goal.id}`, source: factId, target: goal.id, status: "goal_evidence", label: "完成依据" } });
+      edges.push({ data: { id: `goal-evidence:${factId}:${goal.id}`, source: factId, target: goal.id, status: "goal_evidence", label: "Completion evidence" } });
     }
   }
   for (const step of detail.steps || []) {
@@ -67,7 +67,7 @@ export function buildFactGraph(detail) {
     if (step.goal_id) {
       edges.push({ data: {
         id: `scope:${step.id}:${step.goal_id}`, source: step.to || step.id, target: step.goal_id,
-        stepId: step.id, status: "step_scope", label: "推进目标",
+        stepId: step.id, status: "step_scope", label: "Advances goal",
       } });
     }
   }

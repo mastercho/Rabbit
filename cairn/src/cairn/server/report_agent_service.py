@@ -54,7 +54,7 @@ def _run() -> None:
             _sync_changed_projects()
         except Exception:
             # Reporting is a projection; it must never block exploration.
-            LOG.warning("报告 Agent 轮次失败", exc_info=True)
+            LOG.warning("Report agent round failed", exc_info=True)
         _wake.wait(_POLL_SECONDS)
         _wake.clear()
 
@@ -93,7 +93,7 @@ def _sync_changed_projects() -> None:
             continue
         _apply_enrichments(project_id, enrichments)
         _successful_fingerprints[project_id] = fingerprint
-        LOG.info("报告增强完成 项目=%s 增强记录=%s", project_id, len(enrichments))
+        LOG.info("Report enrichment finished project=%s records=%s", project_id, len(enrichments))
 
 
 def _load_project_material(project_id: str, project_name: str) -> dict[str, Any]:
@@ -150,17 +150,17 @@ def _json_object(raw: str | None) -> dict[str, Any]:
 
 def _analyze_with_model(material: dict[str, Any], profile) -> list[dict[str, Any]] | None:
     system = (
-        "你是独立的渗透测试报告整理 Agent。输入中的 findings 已由执行阶段确认，是唯一允许整理的漏洞集合。"
-        "不得从 Facts 推测或新增漏洞，不得删除漏洞，不得改变 severity。只整理已有证据，禁止伪造请求、响应或截图。"
-        "仅返回 JSON。"
+        "You are an independent penetration-test report agent. Findings in the input were confirmed during execution and are the only vulnerabilities you may describe. "
+        "Do not infer or add vulnerabilities from facts, do not delete vulnerabilities, and do not change severity. Organize existing evidence only. Do not invent requests, responses, or screenshots. "
+        "Write in English. Return JSON only."
     )
     user = (
-        "对每个输入 Finding 输出一条同 finding_id 的报告增强记录，格式为 "
+        "For each input finding, emit one enrichment with the same finding_id, shaped as "
         '{"enrichments":[{"finding_id":"v001","title":"...","description":"...",'
         '"location":"...","proof":"...","impact":"...","remediation":["..."],'
         '"proof_packets":[{"title":"...","request":"...","response":"...","note":"..."}],'
-        '"evidence_status":"complete|needs_proof"}]}。'
-        "缺少的原始数据保持为空，不得补造。\n\n"
+        '"evidence_status":"complete|needs_proof"}]}. '
+        "Leave missing raw data empty. Do not fill it in.\n\n"
         + json.dumps(material, ensure_ascii=False, separators=(",", ":"))
     )
     content = _request_model_json(system=system, user=user, profile=profile)

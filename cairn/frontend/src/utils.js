@@ -1,18 +1,18 @@
 export const SEVERITY_META = {
-  critical: { label: "严重", tone: "critical" },
-  high: { label: "高危", tone: "high" },
-  medium: { label: "中危", tone: "medium" },
-  low: { label: "低危", tone: "low" },
+  critical: { label: "Critical", tone: "critical" },
+  high: { label: "High", tone: "high" },
+  medium: { label: "Medium", tone: "medium" },
+  low: { label: "Low", tone: "low" },
 };
 
 export const STATUS_META = {
-  active: { label: "运行中", tone: "success" },
-  stopped: { label: "已停止", tone: "warning" },
-  completed: { label: "已完成", tone: "muted" },
-  idle: { label: "空闲", tone: "info" },
-  busy: { label: "忙碌", tone: "success" },
-  offline: { label: "离线", tone: "danger" },
-  disabled: { label: "已关闭", tone: "muted" },
+  active: { label: "Running", tone: "success" },
+  stopped: { label: "Stopped", tone: "warning" },
+  completed: { label: "Completed", tone: "muted" },
+  idle: { label: "Idle", tone: "info" },
+  busy: { label: "Busy", tone: "success" },
+  offline: { label: "Offline", tone: "danger" },
+  disabled: { label: "Disabled", tone: "muted" },
 };
 
 export const TASK_TYPES = ["decide", "execute"];
@@ -31,7 +31,7 @@ export function formatTime(value) {
   const normalized = String(value).endsWith("Z") ? value : `${value}`;
   const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("zh-CN", {
+  return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -42,9 +42,9 @@ export function formatTime(value) {
 
 export function relativeHeartbeat(seconds) {
   if (seconds === null || seconds === undefined) return "-";
-  if (seconds < 60) return `${Math.round(seconds)} 秒前`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)} 分钟前`;
-  return `${Math.round(seconds / 3600)} 小时前`;
+  if (seconds < 60) return `${Math.round(seconds)} s ago`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)} m ago`;
+  return `${Math.round(seconds / 3600)} h ago`;
 }
 
 export function parseHash() {

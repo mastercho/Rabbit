@@ -130,18 +130,18 @@ def test_compose_supports_nested_agent_plan_and_fills_all_detail_tables(monkeypa
     assert len(document.tables) == 6
     summary = document.tables[0]
     assert len(summary.rows) == 6
-    assert [cell.text for cell in summary.rows[1].cells] == ["01", "漏洞 1", "高风险", "未修复"]
-    assert [cell.text for cell in summary.rows[5].cells] == ["05", "漏洞 5", "高风险", "未修复"]
+    assert [cell.text for cell in summary.rows[1].cells] == ["01", "漏洞 1", "高风险", "Not fixed"]
+    assert [cell.text for cell in summary.rows[5].cells] == ["05", "漏洞 5", "高风险", "Not fixed"]
 
     for index, table in enumerate(document.tables[1:], start=1):
         assert table.rows[0].cells[0].text == f"{index:02d}"
         assert table.rows[1].cells[1].text == f"漏洞 {index}"
         assert table.rows[1].cells[3].text == "高风险"
         assert table.rows[2].cells[1].text == f"漏洞描述 {index}"
-        assert table.rows[3].cells[1].text == "未修复"
+        assert table.rows[3].cells[1].text == "Not fixed"
         assert table.rows[4].cells[1].text == f"/target/{index}"
         assert f"模型整理的事实证明 {index}" in table.rows[5].cells[1].text
-        assert "当前事实未保存原始请求/响应数据包或证明截图" in table.rows[5].cells[1].text
+        assert "did not save a raw request/response packet or a proof screenshot" in table.rows[5].cells[1].text
         assert table.rows[6].cells[1].text == f"修复建议 {index}"
 
 
@@ -165,14 +165,14 @@ def test_compose_embeds_real_packets_without_claiming_they_are_missing(monkeypat
     proof = Document(io.BytesIO(body)).tables[1].rows[5].cells[1].text
     assert "GET /download?path=../../etc/passwd HTTP/1.1" in proof
     assert "HTTP/1.1 200 OK" in proof
-    assert "当前事实未保存" not in proof
+    assert "did not save a raw request/response packet" not in proof
 
 
 def test_compose_rejects_missing_model_rows_instead_of_silently_omitting_findings(monkeypatch):
     monkeypatch.setattr(report_template_service, "_resolve_report_composer_profile", lambda: object())
     monkeypatch.setattr(report_template_service, "_request_model_json", lambda **_kwargs: _model_rows(1))
 
-    with pytest.raises(RuntimeError, match="项目当前有 2 条"):
+    with pytest.raises(RuntimeError, match="project currently has 2"):
         report_template_service.compose_template_report(
             _template_bytes(), {"plan": _nested_plan()}, {"name": "测试项目"}, _vulnerabilities(2)
         )

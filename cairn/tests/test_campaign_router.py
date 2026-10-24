@@ -124,7 +124,7 @@ def test_campaign_synthesis_aggregates_project_state(client):
     assert body["open_steps"] == ["继续核对 output 越权读取边界"]
     assert body["open_intents"] == ["继续核对 output 越权读取边界"]
     assert body["blockers"]
-    assert any("原文" in step for step in body["next_steps"])
+    assert any("original wording" in step for step in body["next_steps"])
 
 
 def test_campaign_synthesis_marks_completed_project_as_achieved(client):

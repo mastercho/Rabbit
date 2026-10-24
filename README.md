@@ -1,55 +1,55 @@
-# Rabbit（Cairn-Y）
+# Rabbit (Cairn-Y)
 
 ![Rabbit banner](README/rabbit-banner.png)
 
-Rabbit 是一个面向授权安全评估的多 Agent 协作平台。它基于 [oritera/Cairn](https://github.com/oritera/Cairn) 的事实图思想演进，将自动化探索收敛成一条可验证、可追踪、可交付的执行闭环：**Server 保存唯一状态，Dispatcher 负责任务调度，Pi Worker 执行 Decide / Execute，结果写回 Fact，确认的问题以 Finding 作为唯一真相源。**
+Rabbit is a multi-agent platform for authorized security assessments. It extends the fact-graph idea from [oritera/Cairn](https://github.com/oritera/Cairn) and turns automated exploration into a closed loop that can be verified, traced, and delivered: **the Server holds the only state, the Dispatcher schedules work, Pi Workers run Decide / Execute, results are written back as Facts, and a confirmed issue exists only as a Finding.**
 
-项目目录和 Python CLI 保留 `cairn` 名称以兼容原工程结构，产品界面使用 Rabbit。
+The project directory and Python CLI keep the `cairn` name so the original layout still works. The product interface is Rabbit.
 
-> ⚠️ **Rabbit 仅用于已获得明确授权的安全测试、内部验证和研究环境。** 使用前请阅读文末[免责声明](#免责声明)；范围约束约定见 [AUTHORIZED_SECURITY_SCOPE.md](AUTHORIZED_SECURITY_SCOPE.md)。
+> Rabbit is only for security testing, internal validation, and research environments where you already have explicit authorization. Read the [disclaimer](#disclaimer) before use. Scope constraints are in [AUTHORIZED_SECURITY_SCOPE.md](AUTHORIZED_SECURITY_SCOPE.md).
 
-## 产品预览
+## Product preview
 
-### 全局仪表盘
+### Dashboard
 
 ![Rabbit dashboard](README/rabbit-dashboard-2026.jpg)
 
-### 事实图项目工作台
+### Fact-graph workspace
 
 ![Rabbit workspace](README/rabbit-workspace-2026.jpg)
 
-### 漏洞报告与交付
+### Vulnerability reports
 
 ![Rabbit vulnerability reports](README/rabbit-vulnerabilities-2026.jpg)
 
 <details>
-<summary>查看登录页面</summary>
+<summary>Sign-in page</summary>
 
 ![Rabbit login](README/rabbit-login-2026.jpg)
 
 </details>
 
-## Cairn-Y 核心模型
+## Cairn-Y core model
 
 ```text
 Origin
   └─ Goal
-      └─ Decide（串行决策，只创建/调整 Step）
+      └─ Decide (serial decisions; only creates or adjusts Steps)
           └─ Step
-              └─ Execute（并行执行）
+              └─ Execute (parallel)
                   ├─ Fact
-                  └─ Finding（可选，必须关联 Fact）
+                  └─ Finding (optional; must reference a Fact)
 ```
 
-- **Server**：唯一状态真相源，维护 Project、Goal、Step、Fact 和 Finding。
-- **Dispatcher**：负责项目生命周期、串行 Decide、并行 Execute、Worker 调度、租约、心跳和超时。
-- **Pi Worker**：通用执行单元；当前运行配置只注册 Pi，不保留第二套执行内核。
-- **Fact**：执行阶段确认的客观结果；Step 无论成功、失败还是未发现问题，最终都收敛为 Fact。
-- **Finding**：Execute 原生输出的结构化发现，是报告系统唯一允许使用的发现来源。
-- **Vulnerability**：Finding 面向界面和导出格式的投影，不是第二套漏洞数据源。
-- **报告 Agent**：只整理已有 Finding 的表达和证据，不从 Fact 猜测漏洞、不新增漏洞、不改变严重度。
+- **Server**: the only state of record. It stores Project, Goal, Step, Fact, and Finding.
+- **Dispatcher**: project lifecycle, serial Decide, parallel Execute, worker scheduling, leases, heartbeats, and timeouts.
+- **Pi Worker**: the only execution unit. The current runtime registers Pi and does not keep a second execution kernel.
+- **Fact**: an objective result confirmed during Execute. Success, failure, and "nothing found" all end as a Fact.
+- **Finding**: a structured discovery emitted by Execute. It is the only source the report system may use.
+- **Vulnerability**: a projection of a Finding for the UI and export formats. It is not a second vulnerability store.
+- **Report agent**: rewrites existing Findings and their evidence. It does not guess vulnerabilities from Facts, add vulnerabilities, or change severity.
 
-## 架构
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -63,46 +63,46 @@ flowchart LR
     Server --> Report["Finding Projection & Report Agent"]
 ```
 
-运行时只有三类任务：
+The runtime has three task types:
 
-1. `decide`：读取当前 FGS 状态，创建下一批 Step；同一项目始终串行。
-2. `execute`：执行一个 Step，输出 Fact 描述和可选 Finding；允许并行。
-3. `execute_conclude`：将结果原子写回 Server，结束 Step 并建立来源关系。
+1. `decide`: read the current FGS state and create the next Steps. One project is always serial.
+2. `execute`: run one Step and emit a Fact description plus an optional Finding. Steps may run in parallel.
+3. `execute_conclude`: atomically write the result back to the Server, close the Step, and record provenance.
 
-## v1.0 执行层增强
+## v1.0 execution layer
 
-v1.0 将执行核心与 Cairn-Y 完全对齐，重点解决"长实验被切断、失败后从零重来"的收敛问题：
+v1.0 aligns the execution core with Cairn-Y and stops long experiments from being cut off or restarted from zero after a failure:
 
-| 能力 | 说明 |
+| Capability | What it does |
 |---|---|
-| **有界步骤提示词** | decide/execute/conclude 三段提示词内置边界约束：一步回答一个可验证的问题、确认即停、不为穷尽而穷尽，前置未确认不开工。 |
-| **step_recovery 会话恢复** | 执行超时或解析失败后进入 `summary_pending` / `commit_pending` 状态机，重试时**不重新执行原动作**，只补摘要或重放提交；恢复失败升级为 `needs_attention` 并禁止自动重跑，等待人工检查。 |
-| **严格输出解析与修复环** | fail-closed 的 JSON 解析（重复键、围栏、尾部残渣一律拒绝），失败后带语法诊断的定向修复重试，修复不通过才判定失败。 |
-| **工具超时扩展** | Pi bash 工具单次调用默认 90 秒上限（`CAIRN_BASH_TIMEOUT_SECONDS` 可调），防止单条命令耗尽整步预算。 |
-| **JDK 工具链** | Worker 镜像内置 JDK，`jdb` / `javap` 开箱即用，Java 调试协议（JDWP）类目标无需手写协议实现。 |
-| **600 秒执行预算** | 每步 600s（探索 540s + 收尾预留 60s）+ 独立 90s 收尾预算，长利用链（协议交互、多阶段验证）可以一步完成。 |
+| **Bounded step prompts** | Decide, execute, and conclude prompts carry the same limits: one verifiable question per step, stop when it is confirmed, do not exhaust a lead for its own sake, and do not start work whose prerequisite is still unconfirmed. |
+| **step_recovery** | After a timeout or parse failure the step enters `summary_pending` or `commit_pending`. A retry does **not** repeat the original action. It only completes the summary or replays the commit. If recovery fails, the step becomes `needs_attention` and is not auto-rerun. |
+| **Strict output parsing** | Fail-closed JSON parsing rejects duplicate keys, fences, and trailing junk. A failed parse gets one targeted repair retry with a syntax diagnosis. Only a failed repair fails the step. |
+| **Tool timeouts** | A single Pi bash call defaults to 90 seconds (`CAIRN_BASH_TIMEOUT_SECONDS`) so one command cannot consume the whole step budget. |
+| **JDK toolchain** | The worker image includes a JDK. `jdb` and `javap` are available, so JDWP targets do not need a hand-written protocol client. |
+| **600 second step budget** | Each step has 600s (540s of exploration plus a 60s reserve) and a separate 90s conclude budget, so a long verification chain can finish in one step. |
 
-同时，Hint（操作员提示）会随每个新阶段注入 Worker 上下文：提示可以是证据、建议、修正或明确约束，由 Agent 按内容解读，不覆盖更高优先级的指令。
+Operator hints are injected into the worker context at each new phase. A hint may be evidence, a suggestion, a correction, or an explicit constraint. The agent interprets the content. It does not override a higher-priority instruction.
 
-## 当前能力
+## Current capabilities
 
-- **统一工作台**：仪表盘、项目、漏洞报告、Worker、模板、审计日志和系统设置集中管理。
-- **事实图探索**：以 Goal / Step / Fact / Finding 构建可视化关系图，保留来源、时间线和执行日志。
-- **单循环 Agent 架构**：Decide 串行决策，Execute 并行执行，conclude 原子回写，避免双状态源。
-- **执行可靠性**：有界提示词、会话恢复、严格解析修复环与工具超时控制（见上文 v1.0 执行层增强）。
-- **隔离 Worker**：容器化 Pi Worker、并发控制、租约、心跳、超时、启动健康检查和故障切换。
-- **范围与出站约束**：项目上下文和 Scope Guard 约束目标边界；需要强制网络层控制时可启用出站代理。
-- **Finding 驱动报告**：漏洞视图只投影已关联真实 Fact 的 Finding，不从普通执行日志猜测漏洞。
-- **交付链路**：漏洞筛选、状态管理、证据截图、报告 Agent、导出记录以及 Markdown / PDF / DOCX 等格式导出。
-- **客户模板**：导入并启用 DOCX 模板，将结构化发现和证据图片填充到客户报告。
-- **运营与审计**：全局统计、风险趋势、通知、操作审计、数据保留策略和系统健康检查。
-- **身份安全**：注册开关、算术验证码、失败次数限制、bcrypt 密码哈希和服务端 Session。
+- **One workspace**: dashboard, projects, vulnerability reports, workers, templates, audit log, and settings.
+- **Fact-graph exploration**: Goal / Step / Fact / Finding as a visual graph, with provenance, a timeline, and execution logs.
+- **Single-loop agents**: Decide is serial, Execute is parallel, and conclude writes back atomically. There is no second state store.
+- **Execution reliability**: bounded prompts, session recovery, strict parse-and-repair, and tool timeouts.
+- **Isolated workers**: containerized Pi workers, concurrency limits, leases, heartbeats, timeouts, startup health checks, and failover.
+- **Scope and egress**: project context and the scope guard bound the target. An egress proxy can enforce the network boundary when you need it.
+- **Finding-driven reports**: the vulnerability view projects only Findings that reference a real Fact. It does not guess from ordinary execution logs.
+- **Delivery**: filters, status, evidence screenshots, the report agent, export history, and Markdown / PDF / DOCX export.
+- **Client templates**: import and enable a DOCX template, then fill it with structured findings and evidence images.
+- **Operations and audit**: global stats, risk trend, notifications, action audit, retention, and health checks.
+- **Identity**: registration switch, arithmetic captcha, failure lockout, bcrypt password hashes, and server-side sessions.
 
-## 快速启动
+## Quick start
 
-完整的首次安装、升级、备份和故障排查见 [安装与升级](INSTALL.md)。
+First install, upgrade, backup, and troubleshooting are in [Install and upgrade](INSTALL.md).
 
-需要 Docker Engine/Desktop、Compose v2，以及可用的 OpenAI-compatible 模型接口。
+You need Docker Engine or Docker Desktop, Compose v2, and an OpenAI-compatible model API.
 
 ```bash
 git clone https://github.com/Rabbit0007/Rabbit.git
@@ -112,7 +112,7 @@ cp .env.example .env
 cp dispatch.yaml dispatch.local.yaml
 ```
 
-在 `.env` 填入三个服务令牌：
+Put three service tokens in `.env`:
 
 ```dotenv
 CAIRN_INTERNAL_TOKEN=replace-with-random-value
@@ -120,7 +120,7 @@ CAIRN_DISPATCHER_INTERNAL_TOKEN=replace-with-another-random-value
 CAIRN_WORKER_EGRESS_PROXY_TOKEN=replace-with-another-random-value
 ```
 
-在 `dispatch.local.yaml` 的 `PI_API_KEY` 填入模型密钥，保持该文件仅在本机；当前模板注册 4 个 GLM-5.3 Pi Worker，并使用：
+Put the model key in `PI_API_KEY` inside `dispatch.local.yaml` and keep that file on this machine. The template registers 4 GLM-5.3 Pi workers:
 
 ```text
 Model: glm-5.3
@@ -128,9 +128,9 @@ Base URL: https://open.bigmodel.cn/api/coding/paas/v4
 Provider API: openai-completions
 ```
 
-如需其他模型，只修改本机的 `dispatch.local.yaml`。该文件已被 Git 忽略，不要把真实密钥写入公开的 `dispatch.yaml` 模板。`TSEC_SERVER_HOST` 如与本机容器网络不符，也需在本地配置中调整。
+To use another model, change only the local `dispatch.local.yaml`. Git ignores that file. Do not put a real key in the public `dispatch.yaml` template. Adjust `TSEC_SERVER_HOST` in the local file if it does not match this machine's container network.
 
-构建 Worker 镜像（v1.0 起内置 JDK，提供 `jdb`/`javap`）并启动：
+Build the worker image (v1.0 includes a JDK, so `jdb` and `javap` are present) and start:
 
 ```bash
 docker build --platform linux/amd64 -f container/Dockerfile.pi -t rabbit-pentest-worker:pi-0.84.4-jdk .
@@ -138,25 +138,25 @@ docker compose up -d --build
 docker compose ps
 ```
 
-打开 `http://127.0.0.1:8000/`，首次启动后在登录页注册账号。停止服务：
+Open `http://127.0.0.1:8000/` and register an account on the sign-in page. Stop the stack with:
 
 ```bash
 docker compose down
 ```
 
-数据库保存在 `./datas/cairn/`，报告证据保存在 Docker volume `rabbit-pentest-artifacts`。服务默认只绑定 `127.0.0.1:8000`。前端在 Docker 构建过程中自动构建，无需预先执行 npm 命令。
+The database lives in `./datas/cairn/`. Report evidence lives in the Docker volume `rabbit-pentest-artifacts`. The service binds `127.0.0.1:8000` by default. The frontend is built during the Docker build. You do not need to run npm first.
 
-> 修改 `dispatch.local.yaml` 后需要 `docker compose up -d --force-recreate pentest-dispatcher` 才会生效：它是单文件 bind mount，普通 `restart` 不会重新加载。
+> After editing `dispatch.local.yaml`, run `docker compose up -d --force-recreate pentest-dispatcher`. It is a single-file bind mount, so a plain `restart` does not reload it.
 
-## 默认 Worker 并发
+## Default worker concurrency
 
-仓库模板默认注册 4 个同模型 Pi Worker；调度并发上限为 4：
+The repository template registers 4 Pi workers on the same model. The dispatch cap is 4:
 
 ```text
 glm-5.3-1 ... glm-5.3-4
 ```
 
-默认调度约束：
+Default scheduling limits:
 
 ```yaml
 runtime:
@@ -168,40 +168,40 @@ tasks:
   decide:
     max_steps: 3
   execute:
-    timeout: 600                # 每步执行预算（v1.0 关键配置）
+    timeout: 600                # per-step budget (v1.0)
     conclude_timeout: 90
     conclude_reserve_seconds: 60
 ```
 
-这样一次只运行一个项目，最多使用 4 个并发调度槽。Decide 始终串行，不会出现多个决策器同时修改 FGS。
+One project runs at a time and may use up to 4 dispatch slots. Decide stays serial, so two decision loops never edit the FGS at once.
 
-## 报告生成
+## Report generation
 
-报告链路只有一条：
+There is one report path:
 
 ```text
-Decide 创建 Step
-→ Pi Execute 返回 description + optional finding
-→ conclude 原子创建 Fact 并结束 Step
-→ 合法 Finding 与 Fact 关联写入
-→ Finding 投影为漏洞视图
-→ 报告 Agent 整理已有 Finding
-→ UI 展示或导出
+Decide creates a Step
+→ Pi Execute returns a description and an optional finding
+→ conclude atomically creates a Fact and closes the Step
+→ a valid Finding is stored against that Fact
+→ the Finding is projected into the vulnerability view
+→ the report agent organizes existing Findings
+→ the UI shows or exports them
 ```
 
-进入漏洞报告的 Finding 必须满足：
+A Finding enters the vulnerability report only when:
 
-- `kind` 为 `security_vulnerability` 或 `vulnerability`
-- `severity` 为 `critical`、`high`、`medium` 或 `low`
-- 关联真实 `fact_id`
+- `kind` is `security_vulnerability` or `vulnerability`
+- `severity` is `critical`, `high`, `medium`, or `low`
+- it references a real `fact_id`
 
-只有 Fact、没有 Finding 的执行结果不会进入漏洞报告。
+An execution result that has a Fact and no Finding does not enter the vulnerability report.
 
-报告只使用已记录的 Finding 和关联证据，不从普通执行日志推断漏洞。
+Reports use recorded Findings and linked evidence. They do not infer vulnerabilities from ordinary execution logs.
 
-## 开发与测试
+## Development and tests
 
-后端测试：
+Backend tests:
 
 ```bash
 cd cairn
@@ -209,7 +209,7 @@ uv sync
 uv run --with pytest --with httpx python -m pytest
 ```
 
-前端构建：
+Frontend build:
 
 ```bash
 cd cairn/frontend
@@ -217,60 +217,60 @@ npm install
 npm run build
 ```
 
-只启动本地 Server：
+Server only:
 
 ```bash
 cd cairn
 uv run cairn serve --host 127.0.0.1 --port 8765 --log-level info
 ```
 
-常用检查：
+Useful checks:
 
 ```bash
 docker compose ps
 curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/
 ```
 
-## 目录结构
+## Layout
 
 ```text
 .
 ├── cairn/
 │   ├── frontend/                         # Web UI
-│   ├── src/cairn/dispatcher/             # 调度、任务和 Pi Worker 适配
-│   ├── src/cairn/server/                 # API、认证、状态、Finding 和报告
-│   └── tests/                            # 后端与 Cairn-Y 核心测试
-├── container/                            # Worker 容器（Dockerfile.pi 内置 JDK）
-├── docs/specs/                           # 协议与调度设计
-├── .rabbit/context/                      # 可复用项目上下文模板
-├── dispatch.yaml                         # 默认 Pi Worker 配置（占位符模板）
-├── docker-compose.yaml                   # 完整运行环境
-└── .env.example                          # 环境变量模板
+│   ├── src/cairn/dispatcher/             # Scheduling, tasks, and the Pi worker adapter
+│   ├── src/cairn/server/                 # API, auth, state, Findings, and reports
+│   └── tests/                            # Backend and Cairn-Y core tests
+├── container/                            # Worker image (Dockerfile.pi includes a JDK)
+├── docs/specs/                           # Protocol and dispatcher design
+├── .rabbit/context/                      # Reusable project-context templates
+├── dispatch.yaml                         # Default Pi worker config (placeholder template)
+├── docker-compose.yaml                   # Full runtime
+└── .env.example                          # Environment template
 ```
 
-## 设计与验证文档
+## Design and verification docs
 
-- [版本变更记录](CHANGELOG.md)
-- [Cairn-Y 实现总结](cairn/CAIRN_Y_SUMMARY.md)
-- [测试报告](cairn/TEST_REPORT.md)
-- [Server 协议](docs/specs/server-protocol.md)
-- [Dispatcher 设计](docs/specs/dispatcher-design.md)
+- [Changelog](CHANGELOG.md)
+- [Cairn-Y implementation summary](cairn/CAIRN_Y_SUMMARY.md)
+- [Test report](cairn/TEST_REPORT.md)
+- [Server protocol](docs/specs/server-protocol.md)
+- [Dispatcher design](docs/specs/dispatcher-design.md)
 
-## 免责声明
+## Disclaimer
 
-**本项目仅面向获得明确授权的安全测试、自有资产验证、教学研究与实验环境。**
+**This project is only for explicitly authorized security testing, validation of assets you own, teaching, research, and lab environments.**
 
-1. **授权前提**：使用者必须在使用本工具对任何目标进行测试之前，获得目标资产所有者（或其合法授权方）的书面授权。在未获授权的情况下对任何计算机信息系统进行渗透测试、漏洞探测或利用，在大多数司法辖区内属于违法行为。
-2. **合规责任**：使用者有责任自行了解并遵守所在地的法律法规（包括但不限于《网络安全法》《数据安全法》《刑法》相关条款及所在国同类法律）。因使用或滥用本工具而产生的任何直接或间接法律责任，由使用者自行承担，与本项目作者及贡献者无关。
-3. **输出不保证正确**：本工具的发现、结论和报告由大语言模型 Agent 生成，可能存在误报、漏报、过时或不准确的描述。任何 Finding 在被人工复核并验证之前，不应作为事实依据或交付结论使用。
-4. **无担保**：本项目按"现状"（AS IS）提供，不提供任何明示或默示的担保，包括但不限于适销性、特定用途适用性和不侵权。详见 [LICENSE](LICENSE)（AGPL-3.0）第 15、16 条。
-5. **禁止用途**：不得将本工具用于破坏性操作、拒绝服务、持久化控制未授权资产、横向扩散、供应链攻击或其他任何危害他人系统与数据的行为。
-6. **后果自担**：下载、复制或使用本工具即视为已阅读、理解并同意本免责声明的全部条款。不同意请立即停止使用并删除本工具。
+1. **Authorization first.** Before testing any target, you must have written authorization from the asset owner or their legal delegate. Penetration testing, vulnerability probing, or exploitation of a computer system without authorization is illegal in most jurisdictions.
+2. **You own compliance.** You are responsible for knowing and following the law where you operate. Any direct or indirect legal liability from using or misusing this tool is yours, not the authors' or contributors'.
+3. **Output is not guaranteed correct.** Findings, conclusions, and reports are produced by large-language-model agents. They can be false positives, false negatives, stale, or inaccurate. Do not treat a Finding as a fact or a delivery conclusion until a person has reviewed and verified it.
+4. **No warranty.** The project is provided AS IS, without warranty of any kind, including merchantability, fitness for a particular purpose, and non-infringement. See sections 15 and 16 of the [AGPL-3.0 LICENSE](LICENSE).
+5. **Prohibited use.** Do not use this tool for destructive operations, denial of service, persistent control of unauthorized assets, lateral movement outside the authorized scope, supply-chain attacks, or any other action that harms someone else's systems or data.
+6. **Use means you accept this.** Downloading, copying, or using this tool means you have read, understood, and agreed to this disclaimer. If you do not agree, stop and delete it.
 
-## 致谢
+## Acknowledgements
 
-Rabbit/Cairn-Y 基于 [oritera/Cairn](https://github.com/oritera/Cairn) 的事实图协作思想继续演进。感谢原项目对 Fact 图谱、Agent 协作和自动化探索方向的开源贡献。
+Rabbit / Cairn-Y continues the fact-graph collaboration model from [oritera/Cairn](https://github.com/oritera/Cairn). Thanks to the original project for the open work on fact graphs, agent collaboration, and automated exploration.
 
 ## License
 
-本项目遵循仓库中的 [AGPL-3.0 License](LICENSE)。
+This project is licensed under the [AGPL-3.0 License](LICENSE) in the repository.

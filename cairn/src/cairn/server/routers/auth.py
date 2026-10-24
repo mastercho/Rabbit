@@ -154,13 +154,13 @@ def _verify_captcha(captcha_id: str | None, captcha_answer: str | None) -> None:
     now = datetime.now(timezone.utc)
     _cleanup_captchas(now)
     if not captcha_id or captcha_answer is None:
-        raise HTTPException(status_code=400, detail="验证码为必填项")
+        raise HTTPException(status_code=400, detail="Captcha is required")
     expected = _CAPTCHA_CHALLENGES.pop(captcha_id, None)
     if expected is None:
-        raise HTTPException(status_code=400, detail="验证码已过期，请刷新后重试")
+        raise HTTPException(status_code=400, detail="Captcha expired. Refresh it and try again")
     answer, expires_at = expected
     if expires_at <= now or captcha_answer.strip() != answer:
-        raise HTTPException(status_code=400, detail="验证码错误，请重试")
+        raise HTTPException(status_code=400, detail="Incorrect captcha. Try again")
 
 
 @router.get("/captcha")

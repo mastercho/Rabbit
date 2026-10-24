@@ -1,29 +1,29 @@
-# 版本记录
+# Changelog
 
-版本使用 `vMAJOR.MINOR.PATCH` 标签；每个标签对应一个 GitHub Release。历史基线以当时的 GitHub `main` 提交为准，不追改该提交。
+Versions use `vMAJOR.MINOR.PATCH` tags. Each tag has a GitHub Release. Historical baselines stay on the GitHub `main` commit from that time. Those commits are not rewritten.
 
 ## v0.3.1 - 2026-09-30
 
-- 按用户要求，将报告服务、漏洞报告 API、前端 UI 和相应测试恢复为 v0.2.1 初版代码；移除 v0.3.0 新增的交付稿模块。
-- 保留 Docker 前端构建、私有 Worker 配置挂载和密钥排除规则，避免回退导致新安装缺失页面资源或泄露密钥。
-- 本次不更改 Decide/Execute/conclude 代码。
+- Restored the report service, vulnerability report API, frontend UI, and matching tests to the v0.2.1 baseline, as requested. Removed the delivery-draft module added in v0.3.0.
+- Kept the Docker frontend build, the private worker config mount, and the secret-exclusion rules so a rollback does not drop page assets or leak keys.
+- Decide, Execute, and conclude were not changed in this release.
 
 ## v0.3.0 - 2026-09-30
 
-### 更新
+### Changes
 
-- 漏洞交付预览与 Markdown、PDF、DOCX 导出共用只读交付内容，明确标出证据缺口；客户格式默认只导出已确认漏洞，避免空报告。
-- 后台仅同步 Finding 投影；报告预览/导出不调用模型，也不回写 Finding。漏洞发现流程仍由 Decide、Execute 与 conclude 负责。
-- 工作台新增事实图/列表切换与图谱不可用回退；优化项目和漏洞筛选、Worker 列表及详情交互。
-- 默认模板改为 8 个 GLM-5.3 Pi Worker，调度并发上限为 6。实际模型效果取决于用户配置与模型服务。
-- Docker 镜像构建时生成前端资源，修复新克隆仓库缺少被忽略的静态资源的问题。
-- 更新前端锁文件中的受影响依赖，消除当前 npm audit 已知告警。
-- 增加本地忽略的 Worker 配置文件、安装/升级说明，避免把模型或服务密钥随公开仓库发布。
+- Vulnerability delivery preview and Markdown, PDF, and DOCX export share one read-only delivery payload and call out evidence gaps. Client formats export confirmed vulnerabilities by default so empty reports are avoided.
+- The backend only syncs the Finding projection. Report preview and export do not call a model and do not write Findings back. Discovery still belongs to Decide, Execute, and conclude.
+- The workspace can switch between the fact graph and a list, and falls back when the graph is unavailable. Project and vulnerability filters, the worker list, and detail interactions were tightened.
+- The default template uses 8 GLM-5.3 Pi workers with a dispatch cap of 6. Actual model quality depends on your configuration and the model service.
+- Frontend assets are built in the Docker image, so a fresh clone no longer misses gitignored static files.
+- Updated affected dependencies in the frontend lockfile and cleared the known npm audit alerts at that time.
+- Added a gitignored local worker config and install/upgrade notes so model and service keys are not published with the public repository.
 
-### 升级注意
+### Upgrade note
 
-本地部署需把原 Worker 配置保存为 `dispatch.local.yaml`；不要把真实密钥提交到 `dispatch.yaml`。升级前备份数据库、证据 volume 与配置。参见 [INSTALL.md](INSTALL.md)。
+Save the previous worker config as `dispatch.local.yaml`. Do not commit real keys into `dispatch.yaml`. Back up the database, the evidence volume, and the config before upgrading. See [INSTALL.md](INSTALL.md).
 
-## v0.2.1 - GitHub 初版基线
+## v0.2.1 - initial public baseline
 
-以原公开仓库 `main` 的 `0f2e72b` 提交作为基线。包含 Cairn-Y 单循环、事实图、项目与 Worker 管理、Finding 驱动的漏洞视图及基础报告导出。此标签仅标记既有历史，不改写其代码。
+The baseline is commit `0f2e72b` on `main` of the original public repository. It includes the Cairn-Y single loop, the fact graph, project and worker management, the Finding-driven vulnerability view, and basic report export. This tag marks existing history. It does not rewrite that code.

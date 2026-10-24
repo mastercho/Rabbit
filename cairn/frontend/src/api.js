@@ -38,7 +38,7 @@ export async function downloadFromApi(path, fallbackName = "rabbit-export.md") {
   const response = await fetch(path, { credentials: "same-origin" });
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(text || `下载失败：HTTP ${response.status}`);
+    throw new Error(text || `Download failed: HTTP ${response.status}`);
   }
   const blob = await response.blob();
   const disposition = response.headers.get("content-disposition") || "";

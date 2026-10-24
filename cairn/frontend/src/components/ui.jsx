@@ -3,11 +3,11 @@ import { AlertCircle, AlertTriangle, Sparkles, X } from "lucide-react";
 import { cn } from "../utils";
 
 export function ConfirmModal({
-  title = "确认操作",
+  title = "Confirm action",
   message,
   tone = "default",
-  confirmLabel = "确认",
-  cancelLabel = "取消",
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
   onConfirm,
   onCancel,
 }) {

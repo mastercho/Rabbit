@@ -552,14 +552,14 @@ def update_worker_config(config: WorkerConfigUpdate, request: Request) -> Worker
             actor = "system"
         record_audit(
             "worker.config",
-            f"更新工作节点配置（{worker_count} 个节点）",
+            f"Updated worker configuration ({worker_count} workers)",
             actor=actor,
             target_type="worker",
         )
         record_notification(
-            f"工作节点配置已更新",
+            f"Worker configuration updated",
             level="info",
-            body=f"当前纳管 {worker_count} 个 Worker",
+            body=f"{worker_count} workers are managed",
             link="#/workers",
         )
     except Exception:

@@ -148,9 +148,9 @@ function useAsyncAction(setToast) {
         return result;
       } catch (error) {
         if (error?.status === 401) {
-          setToast({ type: "danger", message: "登录状态已失效，请重新登录" });
+          setToast({ type: "danger", message: "Your session has expired. Sign in again." });
         } else {
-          setToast({ type: "danger", message: error.message || "操作失败" });
+          setToast({ type: "danger", message: error.message || "The action failed" });
         }
         throw error;
       }
@@ -233,7 +233,7 @@ export default function App() {
     return (
       <div className="boot-screen">
         <Loader2 className="spin" size={28} />
-        <span>正在载入 Rabbit</span>
+        <span>Loading Rabbit</span>
       </div>
     );
   }
@@ -292,37 +292,37 @@ export default function App() {
 
 function TopNav({ route, user, theme, onToggleTheme, onLogout, onPassword, onSettings, setToast }) {
   const mainNav = [
-    ["projects", "项目", Folder],
-    ["vulnerabilities", "漏洞报告", AlertTriangle],
-    ["workers", "工作节点", Monitor],
-    ["templates", "模板", FileText],
+    ["projects", "Projects", Folder],
+    ["vulnerabilities", "Vulnerability reports", AlertTriangle],
+    ["workers", "Workers", Monitor],
+    ["templates", "Templates", FileText],
   ];
   const activeNav = mainNav.find(([key]) => route.page === key || (key === "projects" && route.page === "project"));
   const sectionLabel =
     route.page === "dashboard"
-      ? "仪表盘"
+      ? "Dashboard"
       : route.page === "audit"
-        ? "审计日志"
+        ? "Audit log"
         : activeNav?.[1] || APP_NAME;
   const reportSubnav = [
-    { title: null, items: [["overview", "报告总览"]] },
+    { title: null, items: [["overview", "Report overview"]] },
     {
-      title: "按严重程度",
+      title: "By severity",
       items: [
-        ["critical", "严重漏洞"],
-        ["high", "高危漏洞"],
-        ["medium", "中危漏洞"],
-        ["low", "低危漏洞"],
+        ["critical", "Critical"],
+        ["high", "High"],
+        ["medium", "Medium"],
+        ["low", "Low"],
       ],
     },
     {
-      title: "按处理状态",
+      title: "By status",
       items: [
-        ["confirmed", "已确认漏洞"],
-        ["ignored", "已忽略漏洞"],
+        ["confirmed", "Confirmed"],
+        ["ignored", "Ignored"],
       ],
     },
-    { title: null, items: [["export-records", "导出记录"]] },
+    { title: null, items: [["export-records", "Export history"]] },
   ];
   const vulnRouteActive = route.page === "vulnerabilities";
   const [reportExpanded, setReportExpanded] = useState(vulnRouteActive);
@@ -330,8 +330,8 @@ function TopNav({ route, user, theme, onToggleTheme, onLogout, onPassword, onSet
   const activeView = route.page === "vulnerabilities" ? route.view || "overview" : null;
   const searchPlaceholder =
     route.page === "projects" || route.page === "project"
-      ? "搜索项目名称、编号、负责人、标签..."
-      : "搜索漏洞标题、编号、项目、标签...";
+      ? "Search project name, id, owner, tags..."
+      : "Search title, id, project, tags...";
 
   useEffect(() => {
     if (vulnRouteActive) {
@@ -370,29 +370,29 @@ function TopNav({ route, user, theme, onToggleTheme, onLogout, onPassword, onSet
             className="icon-button"
             type="button"
             onClick={onToggleTheme}
-            aria-label={theme === "dark" ? "切换为浅色模式" : "切换为深色模式"}
-            title={theme === "dark" ? "浅色模式" : "深色模式"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <button className="user-chip" type="button" onClick={onPassword} title="修改密码">
+          <button className="user-chip" type="button" onClick={onPassword} title="Change password">
             <span className="user-avatar">{(user.username || "U").slice(0, 1).toUpperCase()}</span>
             <span className="user-name">{user.username}</span>
           </button>
-          <button className="icon-button" type="button" onClick={onLogout} aria-label="退出登录" title="退出登录">
+          <button className="icon-button" type="button" onClick={onLogout} aria-label="Sign out" title="Sign out">
             <LogOut size={16} />
           </button>
         </div>
       </header>
       <aside className="top-nav">
-        <nav className="nav-tabs" aria-label="主导航">
+        <nav className="nav-tabs" aria-label="Primary">
           <button
             className={cn("nav-tab", route.page === "dashboard" && "active")}
             type="button"
             onClick={() => go("#/dashboard")}
           >
             <Home size={17} />
-            首页
+            Home
           </button>
           {mainNav.map(([key, label, Icon]) => {
             const active = route.page === key || (key === "projects" && route.page === "project");
@@ -438,23 +438,23 @@ function TopNav({ route, user, theme, onToggleTheme, onLogout, onPassword, onSet
             onClick={() => go("#/audit")}
           >
             <History size={17} />
-            审计日志
+            Audit log
           </button>
           <button className="nav-tab" type="button" onClick={onSettings}>
             <Settings size={17} />
-            系统设置
+            Settings
           </button>
         </nav>
         <div className="sidebar-foot">
           <FileText size={15} />
-          <span>默认工作区</span>
+          <span>Default workspace</span>
         </div>
       </aside>
     </>
   );
 }
 
-function GlobalSearch({ setToast, placeholder = "搜索漏洞标题、编号、项目、标签...", shortcutLabel = "" }) {
+function GlobalSearch({ setToast, placeholder = "Search title, id, project, tags...", shortcutLabel = "" }) {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -509,7 +509,7 @@ function GlobalSearch({ setToast, placeholder = "搜索漏洞标题、编号、�
         setData({ vulnerabilities, projects });
         setOpen(true);
       } catch (error) {
-        if (!cancelled && setToast) setToast({ type: "danger", message: error.message || "搜索失败" });
+        if (!cancelled && setToast) setToast({ type: "danger", message: error.message || "Search failed" });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -552,7 +552,7 @@ function GlobalSearch({ setToast, placeholder = "搜索漏洞标题、编号、�
         <input
           value={term}
           placeholder={placeholder}
-          aria-label="全局搜索"
+          aria-label="Global search"
           onChange={(event) => setTerm(event.target.value)}
           onFocus={() => term.trim() && setOpen(true)}
           onKeyDown={(event) => {
@@ -561,7 +561,7 @@ function GlobalSearch({ setToast, placeholder = "搜索漏洞标题、编号、�
         />
         {!term && shortcutLabel && <span className="global-search-shortcut">{shortcutLabel}</span>}
         {term && (
-          <button type="button" className="global-search-clear" onClick={reset} aria-label="清空搜索">
+          <button type="button" className="global-search-clear" onClick={reset} aria-label="Clear search">
             <X size={14} />
           </button>
         )}
@@ -571,18 +571,18 @@ function GlobalSearch({ setToast, placeholder = "搜索漏洞标题、编号、�
           {loading && !hasResults ? (
             <div className="search-empty">
               <Loader2 className="spin" size={16} />
-              <span>搜索中...</span>
+              <span>Searching...</span>
             </div>
           ) : !hasResults ? (
             <div className="search-empty">
               <Search size={16} />
-              <span>未找到匹配结果</span>
+              <span>No matches</span>
             </div>
           ) : (
             <>
               {data.vulnerabilities.length > 0 && (
                 <section className="search-section">
-                  <header>漏洞</header>
+                  <header>Vulnerabilities</header>
                   {data.vulnerabilities.map((vuln) => {
                     const meta = SEVERITY_META[vuln.severity] || SEVERITY_META.low;
                     return (
@@ -601,7 +601,7 @@ function GlobalSearch({ setToast, placeholder = "搜索漏洞标题、编号、�
               )}
               {data.projects.length > 0 && (
                 <section className="search-section">
-                  <header>项目</header>
+                  <header>Projects</header>
                   {data.projects.map((project) => (
                     <button key={`p-${project.id}`} type="button" className="search-item" onClick={() => goProject(project)}>
                       <span className="search-icon">
@@ -633,7 +633,7 @@ function AuditPage({ setToast }) {
       const list = await apiRequest("/api/audit?limit=100");
       setEntries(Array.isArray(list) ? list : []);
     } catch (error) {
-      if (!silent) setToast({ type: "danger", message: error.message || "审计日志加载失败" });
+      if (!silent) setToast({ type: "danger", message: error.message || "Could not load the audit log" });
     } finally {
       if (!silent) setLoading(false);
     }
@@ -660,12 +660,12 @@ function AuditPage({ setToast }) {
     <>
       <PageHeader
         icon={History}
-        title="审计日志"
-        subtitle="记录关键操作的时间、对象与详情"
+        title="Audit log"
+        subtitle="Time, target, and detail for key actions"
         actions={
           <button className="ghost-button" type="button" onClick={() => load()}>
             <RefreshCw size={18} />
-            刷新
+            Refresh
           </button>
         }
       />
@@ -673,26 +673,26 @@ function AuditPage({ setToast }) {
         <article className="vuln-table-card audit-card">
           <header className="vuln-table-title">
             <div>
-              <h2>操作记录</h2>
-              <p>最近 100 条关键操作，每 10 秒自动刷新</p>
+              <h2>Activity</h2>
+              <p>The latest 100 key actions, refreshed every 10 seconds</p>
             </div>
             <span className="status-pill">
               <span className="dot success" />
-              <span>{entries.length} 条</span>
+              <span>{entries.length}</span>
             </span>
           </header>
           <div className="audit-head">
-            <span>时间</span>
-            <span>操作</span>
-            <span>摘要</span>
-            <span>对象</span>
-            <span>操作者</span>
+            <span>Time</span>
+            <span>Action</span>
+            <span>Summary</span>
+            <span>Target</span>
+            <span>Actor</span>
           </div>
           <div className="audit-body">
             {loading ? (
-              <EmptyState icon={Loader2} title="正在加载审计日志" />
+              <EmptyState icon={Loader2} title="Loading the audit log" />
             ) : entries.length === 0 ? (
-              <EmptyState icon={History} title="暂无审计记录" subtitle="关键操作发生后会在这里留痕。" />
+              <EmptyState icon={History} title="No audit entries yet" subtitle="Key actions will show up here." />
             ) : (
               entries.map((entry) => (
                 <div className="audit-row" key={entry.id}>
@@ -766,13 +766,13 @@ function AuthPage({ onAuthed, setToast }) {
   );
   const submitLabel = loading
     ? isRegister
-      ? "正在注册..."
-      : "正在登录..."
+      ? "Creating account..."
+      : "Signing in..."
     : cooldownSeconds > 0
-      ? `${cooldownSeconds} 秒后重试`
+      ? `${cooldownSeconds} s until you can retry`
       : isRegister
-        ? "注册账号"
-        : "登录";
+        ? "Create account"
+        : "Sign in";
 
   const updateField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -794,48 +794,48 @@ function AuthPage({ onAuthed, setToast }) {
   };
 
   const describeAuthError = (error) => {
-    if (error?.status === 400 && String(error.message || "").includes("验证码")) {
-      return { type: "warning", title: "验证码无效", body: error.message };
+    if (error?.status === 400 && String(error.message || "").toLowerCase().includes("captcha")) {
+      return { type: "warning", title: "Invalid captcha", body: error.message };
     }
     if (error?.status === 401) {
       return {
         type: "danger",
-        title: "账号或密码错误",
-        body: "请检查账号、密码和验证码。为安全起见，不区分账号是否存在。",
+        title: "Incorrect username or password",
+        body: "Check the username, password, and captcha. For safety, this does not reveal whether the account exists.",
       };
     }
     if (error?.status === 409 && isRegister) {
-      return { type: "warning", title: "用户名不可用", body: "这个用户名已被占用，请换一个再试。" };
+      return { type: "warning", title: "Username unavailable", body: "That username is taken. Try another." };
     }
     if (error?.status === 422) {
       return {
         type: "warning",
-        title: "输入格式不符合要求",
-        body: isRegister ? "用户名需 3-32 个字符，密码长度至少 8 位。" : "请填写用户名、密码和验证码。",
+        title: "Input does not meet the requirements",
+        body: isRegister ? "Usernames must be 3–32 characters, and passwords at least 8." : "Enter a username, password, and captcha.",
       };
     }
     if (error?.status === 429) {
       return {
         type: "danger",
-        title: "登录尝试过多",
-        body: "该账号短时间内失败次数过多，服务端已临时限制登录。请 15 分钟后再试。",
+        title: "Too many sign-in attempts",
+        body: "This account failed too many times and is temporarily locked. Try again in 15 minutes.",
       };
     }
-    return { type: "danger", title: "认证请求失败", body: "服务暂时没有返回有效结果，请检查网络或稍后重试。" };
+    return { type: "danger", title: "Authentication request failed", body: "The service did not return a result. Check the network and try again." };
   };
 
   const submit = async (event) => {
     event.preventDefault();
     if (loading) return;
     if (!captcha?.captcha_id) {
-      setAuthMessage({ type: "warning", title: "验证码未就绪", body: "请先刷新验证码后再提交。" });
+      setAuthMessage({ type: "warning", title: "Captcha is not ready", body: "Refresh the captcha before submitting." });
       return;
     }
     if (passwordsMismatch) {
-      setAuthMessage({ type: "warning", title: "两次密码不一致", body: "请重新确认要设置的密码。" });
+      setAuthMessage({ type: "warning", title: "Passwords do not match", body: "Re-enter the password you want to set." });
       return;
     }
-    setAuthMessage({ type: "info", title: isRegister ? "正在创建账户" : "正在验证身份", body: "请稍候，不要重复提交。" });
+    setAuthMessage({ type: "info", title: isRegister ? "Creating the account" : "Checking credentials", body: "Please wait. Do not submit again." });
     setLoading(true);
     try {
       await apiRequest(`/api/auth/${isRegister ? "register" : "login"}`, {
@@ -849,7 +849,7 @@ function AuthPage({ onAuthed, setToast }) {
       });
       setFailedAttempts(0);
       setCooldownUntil(0);
-      setAuthMessage({ type: "success", title: "验证通过", body: "正在进入工作台。" });
+      setAuthMessage({ type: "success", title: "Signed in", body: "Opening the workspace." });
       await onAuthed();
     } catch (error) {
       const message = describeAuthError(error);
@@ -893,24 +893,24 @@ function AuthPage({ onAuthed, setToast }) {
           </div>
           <div className="auth-copy">
             <h2>
-              持续安全探索
+              Continuous security exploration
               <br />
-              让攻击<span>无处遁形</span>
+              Leave attacks<span>nowhere to hide</span>
             </h2>
-            <p>Rabbit 帮助安全团队自动化资产发现、漏洞验证和攻击面管理，让安全探索更清晰。</p>
+            <p>Rabbit helps security teams automate asset discovery, vulnerability verification, and attack-surface management.</p>
           </div>
           <div className="auth-capabilities">
             <span>
               <ShieldAlert size={16} />
-              资产发现
+              Asset discovery
             </span>
             <span>
               <CheckCircle2 size={16} />
-              漏洞验证
+              Verification
             </span>
             <span>
               <Network size={16} />
-              攻击面管理
+              Attack surface
             </span>
           </div>
         </aside>
@@ -919,29 +919,29 @@ function AuthPage({ onAuthed, setToast }) {
           {mode === "register" && (
             <button className="auth-back" type="button" onClick={() => switchMode("login")} disabled={loading}>
               <ArrowLeft size={16} />
-              返回登录
+              Back to sign in
             </button>
           )}
           <div className="auth-title align-left">
-            <h1>{isRegister ? "创建账户" : "欢迎回来"}</h1>
-            <p>{isRegister ? "加入 Rabbit 安全探索平台" : "登录以继续安全探索工作流"}</p>
+            <h1>{isRegister ? "Create account" : "Welcome back"}</h1>
+            <p>{isRegister ? "Join the Rabbit security workspace" : "Sign in to continue"}</p>
           </div>
           {mode === "login" && (
             <div className="segmented auth-login-tabs">
               <button className="active" type="button">
-                账号登录
+                Account
               </button>
               <button
                 type="button"
-                onClick={() => setToast({ type: "info", message: "手机号验证码登录暂未接入，先使用账号登录。" })}
+                onClick={() => setToast({ type: "info", message: "Phone sign-in is not available. Use an account instead." })}
               >
-                手机号登录
+                Phone
               </button>
             </div>
           )}
           <div className="auth-security-note">
             <ShieldCheck size={16} />
-            <span>验证码校验、失败次数限制和安全 Session 已启用</span>
+            <span>Captcha, lockout, and server sessions are enabled</span>
           </div>
           {authMessage && (
             <div className={cn("auth-inline-alert", authMessage.type)} role="alert" aria-live="polite">
@@ -950,25 +950,25 @@ function AuthPage({ onAuthed, setToast }) {
                 <strong>{authMessage.title}</strong>
                 <p>{authMessage.body}</p>
                 {!isRegister && failedAttempts > 0 && authMessage.type === "danger" && (
-                  <small>当前浏览器已记录 {failedAttempts} 次失败；服务端会按账号执行 15 分钟窗口限流。</small>
+                  <small>This browser has recorded {failedAttempts} failures. The server rate-limits each account on a 15-minute window.</small>
                 )}
               </div>
             </div>
           )}
           <form className="stack-form auth-stack-form" onSubmit={submit}>
             <label>
-              <span>用户名</span>
+              <span>Username</span>
               <input
                 autoComplete="username"
                 required
                 disabled={loading}
                 value={form.username}
                 onChange={(event) => updateField("username", event.target.value)}
-                placeholder="请输入用户名"
+                placeholder="Username"
               />
             </label>
             <label>
-              <span>密码</span>
+              <span>Password</span>
               <input
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 type="password"
@@ -976,12 +976,12 @@ function AuthPage({ onAuthed, setToast }) {
                 disabled={loading}
                 value={form.password}
                 onChange={(event) => updateField("password", event.target.value)}
-                placeholder={mode === "login" ? "请输入密码" : "请设置密码"}
+                placeholder={mode === "login" ? "Password" : "Choose a password"}
               />
             </label>
             {mode === "register" && (
               <label>
-                <span>确认密码</span>
+                <span>Confirm password</span>
                 <input
                   autoComplete="new-password"
                   type="password"
@@ -991,13 +991,13 @@ function AuthPage({ onAuthed, setToast }) {
                   className={passwordsMismatch ? "input-invalid" : ""}
                   value={form.confirm_password}
                   onChange={(event) => updateField("confirm_password", event.target.value)}
-                  placeholder="请再次输入密码"
+                  placeholder="Re-enter the password"
                 />
-                {passwordsMismatch && <small className="field-hint danger">两次输入的密码不一致</small>}
+                {passwordsMismatch && <small className="field-hint danger">The passwords do not match</small>}
               </label>
             )}
             <label>
-              <span>验证码</span>
+              <span>Captcha</span>
               <div className="captcha-row">
                 <input
                   required
@@ -1005,10 +1005,10 @@ function AuthPage({ onAuthed, setToast }) {
                   inputMode="numeric"
                   value={form.captcha_answer}
                   onChange={(event) => updateField("captcha_answer", event.target.value)}
-                  placeholder="请输入计算结果"
+                  placeholder="Enter the result"
                 />
                 <button className="captcha-chip" type="button" onClick={loadCaptcha} disabled={loading || captchaLoading}>
-                  {captchaLoading ? "获取中" : captcha?.question || "刷新"}
+                  {captchaLoading ? "Loading" : captcha?.question || "Refresh"}
                   <RefreshCw className={captchaLoading ? "spin" : ""} size={15} />
                 </button>
               </div>
@@ -1019,9 +1019,9 @@ function AuthPage({ onAuthed, setToast }) {
             </button>
           </form>
           <p className="auth-switch">
-            {mode === "login" ? "还没有账号？" : "已有账号？"}
+            {mode === "login" ? "No account yet?" : "Already have an account?"}
             <button type="button" onClick={() => switchMode(mode === "login" ? "register" : "login")} disabled={loading}>
-              {mode === "login" ? "立即注册" : "返回登录"}
+              {mode === "login" ? "Create one" : "Back to sign in"}
             </button>
           </p>
         </main>
@@ -1054,7 +1054,7 @@ function DashboardPage({ runAction, setToast }) {
       setWorkerObservability(workerTelemetry);
       setLastUpdated(new Date());
     } catch (error) {
-      if (!silent) setToast({ type: "danger", message: error.message || "仪表盘数据加载失败" });
+      if (!silent) setToast({ type: "danger", message: error.message || "Could not load the dashboard" });
     } finally {
       if (!silent) setLoading(false);
     }
@@ -1132,74 +1132,74 @@ function DashboardPage({ runAction, setToast }) {
 
   const projectStatusMeta =
     {
-      active: { label: "运行中", tone: "success" },
-      completed: { label: "已完成", tone: "info" },
-      stopped: { label: "已停止", tone: "warning" },
+      active: { label: "Running", tone: "success" },
+      completed: { label: "Completed", tone: "info" },
+      stopped: { label: "Stopped", tone: "warning" },
     };
 
   const quickActions = [
-    { key: "new", label: "新建项目", desc: "定义起点、目标和提示", icon: Plus, onClick: () => setNewOpen(true) },
-    { key: "vulns", label: "漏洞报告", desc: "查看与管理漏洞", icon: AlertTriangle, onClick: () => go("#/vulnerabilities") },
-    { key: "workers", label: "工作节点", desc: "状态与模型配置", icon: Monitor, onClick: () => go("#/workers") },
-    { key: "templates", label: "模板", desc: "复用项目模板", icon: FileText, onClick: () => go("#/templates") },
-    { key: "audit", label: "审计日志", desc: "查看关键操作留痕", icon: History, onClick: () => go("#/audit") },
+    { key: "new", label: "New project", desc: "Set an origin, a goal, and hints", icon: Plus, onClick: () => setNewOpen(true) },
+    { key: "vulns", label: "Vulnerability reports", desc: "Review and manage findings", icon: AlertTriangle, onClick: () => go("#/vulnerabilities") },
+    { key: "workers", label: "Workers", desc: "Status and model configuration", icon: Monitor, onClick: () => go("#/workers") },
+    { key: "templates", label: "Templates", desc: "Reuse project templates", icon: FileText, onClick: () => go("#/templates") },
+    { key: "audit", label: "Audit log", desc: "Review key actions", icon: History, onClick: () => go("#/audit") },
   ];
 
   return (
     <>
       <PageHeader
         icon={Home}
-        title="仪表盘"
-        subtitle="系统全局概览：项目、风险、Worker 与最近活动"
+        title="Dashboard"
+        subtitle="Projects, risk, workers, and recent activity"
         actions={
           <>
             <div className="status-pill">
               <span className="dot success" />
-              <span>{lastUpdated ? `更新于 ${lastUpdated.toLocaleTimeString("zh-CN")}` : "待更新"}</span>
+              <span>{lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString("en-US")}` : "Not updated yet"}</span>
             </div>
             <button className="ghost-button" type="button" onClick={() => load()}>
               <RefreshCw size={18} />
-              刷新
+              Refresh
             </button>
           </>
         }
       />
       <section className="content-wrap dashboard-shell">
         {loading ? (
-          <EmptyState icon={Loader2} title="正在加载仪表盘" />
+          <EmptyState icon={Loader2} title="Loading the dashboard" />
         ) : (
           <>
             <div className="metric-grid dashboard-metric-grid">
               <MetricCard
-                label="全部项目"
+                label="All projects"
                 value={projectCounts.total}
                 tone="info"
                 icon={Folder}
-                description="所有项目总数"
+                description="Total projects"
                 onClick={() => go("#/projects")}
               />
               <MetricCard
-                label="运行中项目"
+                label="Running projects"
                 value={projectCounts.active}
                 tone="success"
                 icon={Play}
-                description="当前正在执行"
+                description="Currently running"
                 onClick={() => queueRoutePreset(PROJECT_PRESET_STORAGE_KEY, { status: "active" }, "#/projects")}
               />
               <MetricCard
-                label="漏洞总数"
+                label="Vulnerabilities"
                 value={statusDistribution.total || 0}
                 tone="high"
                 icon={ShieldAlert}
-                description="当前纳入管理的漏洞"
+                description="Findings currently tracked"
                 onClick={() => go("#/vulnerabilities")}
               />
               <MetricCard
-                label="在线 Worker"
+                label="Online workers"
                 value={workerCounts.online}
                 tone="violet"
                 icon={Monitor}
-                description="当前可接收任务"
+                description="Ready to take tasks"
                 onClick={() => queueRoutePreset(WORKER_PRESET_STORAGE_KEY, { status: "online" }, "#/workers")}
               />
             </div>
@@ -1213,16 +1213,16 @@ function DashboardPage({ runAction, setToast }) {
             <div className="dashboard-ops-grid">
               <section className="vuln-analysis-card dashboard-entity-card">
                 <header>
-                  <h3>项目概览</h3>
-                  <span>{projectCounts.total} 个项目</span>
+                  <h3>Projects</h3>
+                  <span>{projectCounts.total} projects</span>
                 </header>
                 <div className="dashboard-inline-stats">
-                  <MiniStat label="运行中" value={projectCounts.active} />
-                  <MiniStat label="已完成" value={projectCounts.completed} />
-                  <MiniStat label="已停止" value={projectCounts.stopped} />
+                  <MiniStat label="Running" value={projectCounts.active} />
+                  <MiniStat label="Completed" value={projectCounts.completed} />
+                  <MiniStat label="Stopped" value={projectCounts.stopped} />
                 </div>
                 {recentProjects.length === 0 ? (
-                  <p className="analysis-empty">暂无项目数据</p>
+                  <p className="analysis-empty">No project data</p>
                 ) : (
                   <div className="dashboard-entity-list">
                     {recentProjects.map((project) => {
@@ -1237,7 +1237,7 @@ function DashboardPage({ runAction, setToast }) {
                           <div className="dashboard-entity-copy">
                             <strong title={project.title}>{project.title}</strong>
                             <small>
-                              {project.id} · 更新于 {formatTime(project.updated_at || project.created_at)}
+                              {project.id} · Updated {formatTime(project.updated_at || project.created_at)}
                             </small>
                           </div>
                           <Badge tone={meta.tone}>{meta.label}</Badge>
@@ -1249,17 +1249,17 @@ function DashboardPage({ runAction, setToast }) {
               </section>
               <section className="vuln-analysis-card dashboard-entity-card">
                 <header>
-                  <h3>Worker 状态</h3>
-                  <span>{workerCounts.total} 个节点</span>
+                  <h3>Worker status</h3>
+                  <span>{workerCounts.total} workers</span>
                 </header>
                 <div className="dashboard-inline-stats">
-                  <MiniStat label="在线" value={workerCounts.online} />
-                  <MiniStat label="运行中" value={workerCounts.running} />
-                  <MiniStat label="空闲" value={workerCounts.idle} />
-                  <MiniStat label="离线" value={workerCounts.offline} />
+                  <MiniStat label="Online" value={workerCounts.online} />
+                  <MiniStat label="Running" value={workerCounts.running} />
+                  <MiniStat label="Idle" value={workerCounts.idle} />
+                  <MiniStat label="Offline" value={workerCounts.offline} />
                 </div>
                 {workerHighlights.length === 0 ? (
-                  <p className="analysis-empty">暂无 Worker 数据</p>
+                  <p className="analysis-empty">No worker data</p>
                 ) : (
                   <div className="dashboard-entity-list">
                     {workerHighlights.map((worker) => {
@@ -1276,7 +1276,7 @@ function DashboardPage({ runAction, setToast }) {
                             <small title={worker.current_task || ""}>
                               {worker.current_task
                                 ? clampText(worker.current_task, 56)
-                                : `最近心跳 ${relativeHeartbeat(worker.last_heartbeat_seconds_ago)}`}
+                                : `Last heartbeat ${relativeHeartbeat(worker.last_heartbeat_seconds_ago)}`}
                             </small>
                           </div>
                           <Badge tone={meta.tone}>{meta.label}</Badge>
@@ -1290,11 +1290,11 @@ function DashboardPage({ runAction, setToast }) {
             <div className="dashboard-bottom-grid">
               <section className="vuln-analysis-card dashboard-activity-card">
                 <header>
-                  <h3>最近活动</h3>
-                  <span>最新发现</span>
+                  <h3>Recent activity</h3>
+                  <span>Latest findings</span>
                 </header>
                 {recentActivity.length === 0 ? (
-                  <p className="analysis-empty">暂无漏洞活动</p>
+                  <p className="analysis-empty">No vulnerability activity</p>
                 ) : (
                   <div className="dashboard-activity-list">
                     {recentActivity.map((item) => {
@@ -1322,8 +1322,8 @@ function DashboardPage({ runAction, setToast }) {
               </section>
               <section className="vuln-analysis-card dashboard-quick-card">
                 <header>
-                  <h3>快捷入口</h3>
-                  <span>常用入口</span>
+                  <h3>Shortcuts</h3>
+                  <span>Common destinations</span>
                 </header>
                 <div className="quick-action-grid">
                   {quickActions.map((action) => (
@@ -1382,7 +1382,7 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
       setCampaignLoadingByProjectId({});
       setProjects(await apiRequest("/projects"));
     } catch (error) {
-      setToast({ type: "danger", message: error.message || "项目加载失败" });
+      setToast({ type: "danger", message: error.message || "Could not load projects" });
     } finally {
       setLoading(false);
     }
@@ -1428,7 +1428,7 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
   // visible projects — NOT on the campaign state maps. This prevents the
   // effect from re-running when it itself mutates campaignByProjectId /
   // campaignLoadingByProjectId (which previously caused a cancel/reload race
-  // that could strand a card in the "正在汇总" loading state).
+  // that could strand a card in the "Summarizing" loading state).
   const visibleProjectKey = visibleProjects.map((p) => `${p.id}:${p.status}`).join(",");
   useEffect(() => {
     if (!visibleProjectKey) return undefined;
@@ -1486,26 +1486,26 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
   }, [pageSize, searchTerm, statusFilter]);
 
   const projectTabs = [
-    { key: "all", label: "全部", count: counts.total, tone: "info" },
-    { key: "active", label: "运行中", count: counts.active, tone: "success" },
-    { key: "completed", label: "已完成", count: counts.completed, tone: "info" },
-    { key: "stopped", label: "已停止", count: counts.stopped, tone: "warning" },
+    { key: "all", label: "All", count: counts.total, tone: "info" },
+    { key: "active", label: "Running", count: counts.active, tone: "success" },
+    { key: "completed", label: "Completed", count: counts.completed, tone: "info" },
+    { key: "stopped", label: "Stopped", count: counts.stopped, tone: "warning" },
   ];
 
   const deleteProject = async (project) => {
     const ok = await confirmAction({
-      title: "删除项目",
-      message: `确认删除项目「${project.title}」？此操作不可恢复。`,
+      title: "Delete project",
+      message: `Delete project "${project.title}"? This cannot be undone.`,
       tone: "danger",
-      confirmLabel: "删除",
+      confirmLabel: "Delete",
     });
     if (!ok) return;
-    await runAction("项目已删除", () => apiRequest(`/projects/${project.id}`, { method: "DELETE" }));
+    await runAction("Project deleted", () => apiRequest(`/projects/${project.id}`, { method: "DELETE" }));
     await load();
   };
 
   const updateStatus = async (project, status) => {
-    await runAction("项目状态已更新", () =>
+    await runAction("Project status updated", () =>
       apiRequest(`/projects/${project.id}/status`, { method: "PUT", body: { status } }),
     );
     await load();
@@ -1518,7 +1518,7 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
   const submitReopen = async (description) => {
     const project = reopenTarget;
     if (!project) return;
-    await runAction("项目已重新打开", () =>
+    await runAction("Project reopened", () =>
       apiRequest(`/projects/${project.id}/reopen`, {
         method: "POST",
         body: { description, creator: HUMAN_WORKER },
@@ -1532,21 +1532,21 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
     <>
       <PageHeader
         icon={Folder}
-        title="项目"
-        subtitle="面向目标的事实图探索工作区"
+        title="Projects"
+        subtitle="Fact-graph workspace for a goal"
         actions={
           <>
             <div className="status-pill project-running-pill">
               <span className="dot success" />
-              <span>{counts.active} 个运行中</span>
+              <span>{counts.active}  running</span>
             </div>
             <button className="primary-button compact" type="button" onClick={() => setNewOpen(true)}>
               <Plus size={18} />
-              新建项目
+              New project
             </button>
             <button className="primary-outline compact" type="button" onClick={load}>
               <RefreshCw size={18} />
-              刷新
+              Refresh
             </button>
           </>
         }
@@ -1554,36 +1554,36 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
       <section className="content-wrap project-dashboard-page">
         <div className="project-summary-grid">
           <ProjectSummaryCard
-            label="全部项目"
+            label="All projects"
             value={counts.total}
-            description="所有项目总数"
+            description="Total projects"
             tone="blue"
             icon={Folder}
           />
           <ProjectSummaryCard
-            label="运行中"
+            label="Running"
             value={counts.active}
-            description="正在运行的项目"
+            description="Projects currently running"
             tone="green"
             icon={Play}
           />
           <ProjectSummaryCard
-            label="已完成"
+            label="Completed"
             value={counts.completed}
-            description="已完成的项目"
+            description="Projects that have finished"
             tone="slate"
             icon={CheckCircle2}
           />
           <ProjectSummaryCard
-            label="已停止"
+            label="Stopped"
             value={counts.stopped}
-            description="已停止的项目"
+            description="Projects that are stopped"
             tone="violet"
             icon={Pause}
           />
         </div>
         <div className="project-toolbar">
-          <div className="project-filter-tabs" role="tablist" aria-label="项目状态筛选">
+          <div className="project-filter-tabs" role="tablist" aria-label="Filter projects by status">
             {projectTabs.map((tab) => (
               <button
                 key={tab.key}
@@ -1603,21 +1603,21 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="搜索项目名称、编号、负责人、标签..."
+              placeholder="Search project name, id, owner, tags..."
             />
           </label>
         </div>
         {loading ? (
-          <EmptyState icon={Loader2} title="正在加载项目" />
+          <EmptyState icon={Loader2} title="Loading projects" />
         ) : filteredProjects.length === 0 ? (
           <EmptyState
             icon={Folder}
-            title={projects.length === 0 ? "还没有项目" : "当前筛选下没有项目"}
-            subtitle={projects.length === 0 ? "创建一个项目后，Rabbit 会围绕起点、目标和提示生成事实图。" : "调整筛选条件后再试。"}
+            title={projects.length === 0 ? "No projects yet" : "No projects match this filter"}
+            subtitle={projects.length === 0 ? "Create a project and Rabbit will build a fact graph from the origin, goal, and hints." : "Change the filter and try again."}
             action={
               <button className="primary-button compact" type="button" onClick={() => setNewOpen(true)}>
                 <Plus size={18} />
-                新建项目
+                New project
               </button>
             }
           />
@@ -1638,7 +1638,7 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
             ))}
             </div>
             <div className="project-list-footer">
-              <span>共 {filteredProjects.length} 个项目{filteredProjects.length !== projects.length ? ` / 全部 ${projects.length} 个` : ""}</span>
+              <span>{filteredProjects.length} projects{filteredProjects.length !== projects.length ? ` / ${projects.length} total` : ""}</span>
               <div className="project-list-footer-controls">
                 <label className="pagination-size">
                   <select
@@ -1648,9 +1648,9 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
                       setPage(1);
                     }}
                   >
-                    <option value="10">10 条/页</option>
-                    <option value="20">20 条/页</option>
-                    <option value="50">50 条/页</option>
+                    <option value="10">10 / page</option>
+                    <option value="20">20 / page</option>
+                    <option value="50">50 / page</option>
                   </select>
                 </label>
                 <div className="pagination project-pagination">
@@ -1661,7 +1661,7 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
                     onClick={() => setPage((current) => Math.max(1, current - 1))}
                   >
                     <ChevronLeft size={16} />
-                    上一页
+                    Previous
                   </button>
                   <button type="button" className="active">
                     {page} / {totalPages}
@@ -1672,7 +1672,7 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
                     disabled={page >= totalPages}
                     onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                   >
-                    下一页
+                    Next
                     <ChevronRight size={16} />
                   </button>
                 </div>
@@ -1693,11 +1693,11 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
       )}
       {reopenTarget && (
         <TextActionModal
-          title={`重新打开「${reopenTarget.title}」`}
-          label="重新打开原因"
-          placeholder="补充验证或重新探索"
-          defaultValue="补充验证或重新探索"
-          submitLabel="重新打开"
+          title={`Reopen "${reopenTarget.title}"`}
+          label="Reason for reopening"
+          placeholder="Additional verification or a new pass"
+          defaultValue="Additional verification or a new pass"
+          submitLabel="Reopen"
           onClose={() => setReopenTarget(null)}
           onSubmit={submitReopen}
         />
@@ -1709,9 +1709,9 @@ function ProjectsPage({ runAction, setToast, confirmAction }) {
 function ProjectCard({ project, campaign, campaignLoading, onDelete, onStop, onStart, onReopen }) {
   const statusMeta =
     {
-      active: { label: "运行中", tone: "success" },
-      completed: { label: "已完成", tone: "info" },
-      stopped: { label: "已停止", tone: "warning" },
+      active: { label: "Running", tone: "success" },
+      completed: { label: "Completed", tone: "info" },
+      stopped: { label: "Stopped", tone: "warning" },
     }[project.status] || STATUS_META.active;
   const updatedAt = formatTime(project.updated_at || project.created_at);
   return (
@@ -1727,70 +1727,70 @@ function ProjectCard({ project, campaign, campaignLoading, onDelete, onStop, onS
               <Badge tone={statusMeta.tone}>{statusMeta.label}</Badge>
             </span>
             <span className="project-sub">
-              {project.id} · 创建于 {formatTime(project.created_at)}
+              {project.id} · Created {formatTime(project.created_at)}
             </span>
           </span>
         </button>
         <details className="project-more-menu">
-          <summary aria-label="更多操作">
+          <summary aria-label="More actions">
             <MoreVertical size={18} />
           </summary>
           <div className="project-more-panel">
             <button type="button" onClick={() => go(`#/projects/${project.id}`)}>
               <Eye size={15} />
-              打开项目
+              Open project
             </button>
             {project.status === "active" && (
               <button type="button" onClick={onStop}>
                 <Square size={15} />
-                停止项目
+                Stop project
               </button>
             )}
             {project.status === "stopped" && (
               <button type="button" onClick={onStart}>
                 <Play size={15} />
-                继续运行
+                Resume
               </button>
             )}
             {project.status === "completed" && (
               <button type="button" onClick={onReopen}>
                 <RefreshCw size={15} />
-                重新打开
+                Reopen
               </button>
             )}
             <button type="button" className="danger" onClick={onDelete}>
               <Trash2 size={15} />
-              删除项目
+              Delete project
             </button>
           </div>
         </details>
       </div>
       <div className="project-stats">
-        <MiniStat label="事实" value={project.fact_count} />
-        <MiniStat label="步骤" value={project.step_count ?? project.intent_count} />
-        <MiniStat label="工作中" value={project.working_step_count ?? project.working_intent_count} />
+        <MiniStat label="Fact" value={project.fact_count} />
+        <MiniStat label="Step" value={project.step_count ?? project.intent_count} />
+        <MiniStat label="In progress" value={project.working_step_count ?? project.working_intent_count} />
       </div>
       <div className="project-meta-row">
         <div>
           <span>
             <User size={14} />
-            负责人
+            Owner
           </span>
-          <strong>未设置</strong>
+          <strong>Not set</strong>
         </div>
         <div>
           <span>
             <CalendarDays size={14} />
-            更新时间
+            Updated
           </span>
           <strong>{updatedAt}</strong>
         </div>
         <div>
           <span>
             <Tag size={14} />
-            标签
+            Tags
           </span>
-          <strong>未设置</strong>
+          <strong>Not set</strong>
         </div>
       </div>
       <ProjectCampaignPreview campaign={campaign} loading={campaignLoading} />
@@ -1804,29 +1804,29 @@ function ProjectCard({ project, campaign, campaignLoading, onDelete, onStop, onS
       <div className="card-actions project-action-row">
         <button className="ghost-button compact project-action-button" type="button" onClick={() => go(`#/projects/${project.id}`)}>
           <Eye size={16} />
-          打开
+          Open
         </button>
         {project.status === "active" && (
           <button className="ghost-button compact warning project-action-button" type="button" onClick={onStop}>
             <Square size={16} />
-            停止
+            Stop
           </button>
         )}
         {project.status === "stopped" && (
           <button className="ghost-button compact project-action-button" type="button" onClick={onStart}>
             <Play size={16} />
-            继续
+            Resume
           </button>
         )}
         {project.status === "completed" && (
           <button className="ghost-button compact project-action-button" type="button" onClick={onReopen}>
             <RefreshCw size={16} />
-            重新打开
+            Reopen
           </button>
         )}
         <button className="ghost-button compact danger project-action-button" type="button" onClick={onDelete}>
           <Trash2 size={16} />
-          删除
+          Delete
         </button>
       </div>
     </article>
@@ -1838,13 +1838,13 @@ function ProjectCampaignPreview({ campaign, loading }) {
     return (
       <section className="project-briefing loading" aria-live="polite">
         <div className="project-briefing-head">
-          <span className="project-briefing-kicker">主线态势</span>
+          <span className="project-briefing-kicker">Campaign</span>
           <span className="project-briefing-loading">
             <Loader2 size={13} className="spin" />
-            正在汇总
+            Summarizing
           </span>
         </div>
-        <p className="project-briefing-lead">正在生成当前项目的主线摘要。</p>
+        <p className="project-briefing-lead">Building the campaign summary.</p>
       </section>
     );
   }
@@ -1853,10 +1853,10 @@ function ProjectCampaignPreview({ campaign, loading }) {
     return (
       <section className="project-briefing empty">
         <div className="project-briefing-head">
-          <span className="project-briefing-kicker">主线态势</span>
-          <Badge tone="muted">暂不可用</Badge>
+          <span className="project-briefing-kicker">Campaign</span>
+          <Badge tone="muted">Unavailable</Badge>
         </div>
-        <p className="project-briefing-lead">当前项目还没有形成稳定的项目级主线摘要。</p>
+        <p className="project-briefing-lead">This project does not have a stable campaign summary yet.</p>
       </section>
     );
   }
@@ -1866,11 +1866,11 @@ function ProjectCampaignPreview({ campaign, loading }) {
   return (
     <section className="project-briefing">
       <div className="project-briefing-head">
-        <span className="project-briefing-kicker">主线态势</span>
+        <span className="project-briefing-kicker">Campaign</span>
         <div className="project-briefing-badges">
           <Badge tone={goalMeta.tone}>{goalMeta.label}</Badge>
           {campaign.counts.high_value_vulnerabilities > 0 && (
-            <span className="project-briefing-chip">{campaign.counts.high_value_vulnerabilities} 个高价值</span>
+            <span className="project-briefing-chip">{campaign.counts.high_value_vulnerabilities}  high-value</span>
           )}
         </div>
       </div>
@@ -1878,9 +1878,9 @@ function ProjectCampaignPreview({ campaign, loading }) {
         {campaign.lead}
       </p>
       <div className="project-briefing-meta">
-        <span>开放步骤 {campaign.counts.open_steps}</span>
-        <span>阻塞 {campaign.blockers.length}</span>
-        <span>下一步 {campaign.next_steps.length}</span>
+        <span>Open steps {campaign.counts.open_steps}</span>
+        <span>Blockers {campaign.blockers.length}</span>
+        <span>Next steps {campaign.next_steps.length}</span>
       </div>
     </section>
   );
@@ -1899,7 +1899,7 @@ function NewProjectModal({ onClose, onCreated, runAction, initial = null }) {
     event.preventDefault();
     setSaving(true);
     try {
-      const detail = await runAction("项目已创建", () =>
+      const detail = await runAction("Project created", () =>
         apiRequest("/projects", {
           method: "POST",
           body: {
@@ -1917,15 +1917,15 @@ function NewProjectModal({ onClose, onCreated, runAction, initial = null }) {
   };
 
   return (
-    <Modal title="新建项目" subtitle="只需要定义起点、目标和必要提示，Worker 会围绕事实图推进。" onClose={onClose} wide>
+    <Modal title="New project" subtitle="Set an origin, a goal, and any hints. Workers advance the fact graph from there." onClose={onClose} wide>
       <form className="stack-form modal-body" onSubmit={submit}>
         <label>
-          <span>项目名称</span>
+          <span>Project name</span>
           <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
         </label>
         <div className="two-col">
           <label>
-            <span>起点</span>
+            <span>Origin</span>
             <textarea
               value={form.origin}
               onChange={(event) => setForm({ ...form, origin: event.target.value })}
@@ -1934,7 +1934,7 @@ function NewProjectModal({ onClose, onCreated, runAction, initial = null }) {
             />
           </label>
           <label>
-            <span>目标</span>
+            <span>Goal</span>
             <textarea
               value={form.goal}
               onChange={(event) => setForm({ ...form, goal: event.target.value })}
@@ -1944,21 +1944,21 @@ function NewProjectModal({ onClose, onCreated, runAction, initial = null }) {
           </label>
         </div>
         <label>
-          <span>初始提示</span>
+          <span>Initial hints</span>
           <textarea
             value={form.hints}
             onChange={(event) => setForm({ ...form, hints: event.target.value })}
             rows={4}
-            placeholder="每行一条提示"
+            placeholder="One hint per line"
           />
         </label>
         <div className="modal-footer">
           <button className="ghost-button" type="button" onClick={onClose}>
-            取消
+            Cancel
           </button>
           <button className="primary-button compact" type="submit" disabled={saving}>
             {saving ? <Loader2 className="spin" size={18} /> : <Plus size={18} />}
-            创建项目
+            Create project
           </button>
         </div>
       </form>
@@ -1988,7 +1988,7 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       setCampaign(synthesis);
     } catch (error) {
       setCampaign(null);
-      setToast({ type: "danger", message: error.message || "项目加载失败" });
+      setToast({ type: "danger", message: error.message || "Could not load projects" });
     } finally {
       setLoading(false);
     }
@@ -2021,7 +2021,7 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       setModal(null);
       return;
     }
-    await runAction("项目名称已更新", () =>
+    await runAction("Project name updated", () =>
       apiRequest(`/projects/${project.id}/title`, { method: "PUT", body: { title } }),
     );
     setModal(null);
@@ -2029,7 +2029,7 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
   };
 
   const updateStatus = async (status) => {
-    await runAction("项目状态已更新", () =>
+    await runAction("Project status updated", () =>
       apiRequest(`/projects/${project.id}/status`, { method: "PUT", body: { status } }),
     );
     await load();
@@ -2037,13 +2037,13 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
 
   const deleteProject = async () => {
     const ok = await confirmAction({
-      title: "删除项目",
-      message: `确认删除项目「${project.title}」？此操作不可恢复。`,
+      title: "Delete project",
+      message: `Delete project "${project.title}"? This cannot be undone.`,
       tone: "danger",
-      confirmLabel: "删除",
+      confirmLabel: "Delete",
     });
     if (!ok) return;
-    await runAction("项目已删除", () => apiRequest(`/projects/${project.id}`, { method: "DELETE" }));
+    await runAction("Project deleted", () => apiRequest(`/projects/${project.id}`, { method: "DELETE" }));
     go("#/projects");
   };
 
@@ -2052,17 +2052,17 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
   };
 
   if (loading) {
-    return <EmptyState icon={Loader2} title="正在载入图谱" />;
+    return <EmptyState icon={Loader2} title="Loading the graph" />;
   }
 
   if (!detail) {
     return (
       <EmptyState
         icon={AlertTriangle}
-        title="项目不可用"
+        title="Project unavailable"
         action={
           <button className="primary-outline" type="button" onClick={() => go("#/projects")}>
-            返回项目
+            Back to projects
           </button>
         }
       />
@@ -2086,8 +2086,8 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
         </div>
         <div className="workspace-actions">
           <div className="status-pill">
-            <span>{facts.length} 个事实</span>
-            <span>{steps.length} 个步骤</span>
+            <span>{facts.length}  facts</span>
+            <span>{steps.length}  steps</span>
           </div>
           <button className="ghost-button compact" type="button" onClick={() => exportProject("yaml")}>
             <Download size={16} />
@@ -2095,31 +2095,31 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
           </button>
           <button className="ghost-button compact" type="button" onClick={() => exportProject("timeline")}>
             <Clock size={16} />
-            时间线
+            Timeline
           </button>
           {project.status === "active" ? (
             <button className="ghost-button compact warning" type="button" onClick={() => updateStatus("stopped")}>
               <Square size={16} />
-              停止
+              Stop
             </button>
           ) : project.status === "stopped" ? (
             <button className="ghost-button compact" type="button" onClick={() => updateStatus("active")}>
               <Play size={16} />
-              继续
+              Resume
             </button>
           ) : (
             <button className="ghost-button compact" type="button" onClick={() => setModal("reopen")}>
               <RefreshCw size={16} />
-              重新打开
+              Reopen
             </button>
           )}
           <button className="ghost-button compact danger" type="button" onClick={deleteProject}>
             <Trash2 size={16} />
-            删除
+            Delete
           </button>
           <button className="ghost-button compact" type="button" onClick={load}>
             <RefreshCw size={16} />
-            刷新
+            Refresh
           </button>
         </div>
       </section>
@@ -2127,7 +2127,7 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
         <div className="graph-panel">
           <div className="graph-controls">
           <div className="graph-toolbar">
-            <button className="ghost-button compact" type="button" aria-label="适配图谱" title="适配图谱" onClick={() => window.dispatchEvent(new Event("rabbit:fit-graph"))}>
+            <button className="ghost-button compact" type="button" aria-label="Fit graph" title="Fit graph" onClick={() => window.dispatchEvent(new Event("rabbit:fit-graph"))}>
               <Maximize2 size={16} />
             </button>
             <select value={layout} onChange={(event) => setLayout(event.target.value)}>
@@ -2142,7 +2142,7 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
           <div className="graph-actions">
             <button className="primary-outline compact" type="button" onClick={() => setModal("intent")}>
               <Plus size={16} />
-              步骤
+              Step
             </button>
             <button
               className="primary-outline compact success"
@@ -2151,15 +2151,15 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
               disabled={!selectedStep || selectedStep.to}
             >
               <CheckCircle2 size={16} />
-              完成
+              Complete
             </button>
             <button className="primary-outline compact warning" type="button" onClick={() => setModal("hint")}>
               <Sparkles size={16} />
-              提示
+              Hint
             </button>
             <button className="primary-outline compact" type="button" onClick={() => setModal("complete")}>
               <ShieldAlert size={16} />
-              总结
+              Conclude
             </button>
           </div>
           </div>
@@ -2179,12 +2179,12 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       </section>
       {modal === "intent" && (
         <IntentModal
-          title="新增执行步骤"
+          title="New step"
           fromIds={selectedFactIds}
           facts={facts}
           onClose={() => setModal(null)}
           onSubmit={async (payload) => {
-            await runAction("步骤已创建", () =>
+            await runAction("Step created", () =>
               apiRequest(`/projects/${project.id}/steps`, { method: "POST", body: payload }),
             );
             setModal(null);
@@ -2194,11 +2194,11 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       )}
       {modal === "conclude" && selectedStep && (
         <TextActionModal
-          title={`完成步骤 ${selectedStep.id}`}
-          label="产出事实"
+          title={`Complete step ${selectedStep.id}`}
+          label="Resulting fact"
           onClose={() => setModal(null)}
           onSubmit={async (description) => {
-            await runAction("步骤已完成", () =>
+            await runAction("Step completed", () =>
               apiRequest(`/projects/${project.id}/steps/${selectedStep.id}/conclude`, {
                 method: "POST",
                 body: { worker: selectedStep.worker || HUMAN_WORKER, description },
@@ -2211,11 +2211,11 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       )}
       {modal === "hint" && (
         <TextActionModal
-          title="添加项目提示"
-          label="提示内容"
+          title="Add a hint"
+          label="Hint"
           onClose={() => setModal(null)}
           onSubmit={async (content) => {
-            await runAction("提示已添加", () =>
+            await runAction("Hint added", () =>
               apiRequest(`/projects/${project.id}/hints`, { method: "POST", body: { content, creator: HUMAN_WORKER } }),
             );
             setModal(null);
@@ -2225,11 +2225,11 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       )}
       {modal === "complete" && (
         <TextActionModal
-          title="总结项目"
-          label="总结结论"
+          title="Conclude project"
+          label="Conclusion"
           onClose={() => setModal(null)}
           onSubmit={async (description) => {
-            await runAction("项目已完成", () =>
+            await runAction("Project completed", () =>
               apiRequest(`/projects/${project.id}/complete`, {
                 method: "POST",
                 body: { from: selectedFactIds, worker: HUMAN_WORKER, description },
@@ -2242,11 +2242,11 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       )}
       {modal === "reopen" && (
         <TextActionModal
-          title="重新打开项目"
-          label="重新打开原因"
+          title="Reopen project"
+          label="Reason for reopening"
           onClose={() => setModal(null)}
           onSubmit={async (description) => {
-            await runAction("项目已重新打开", () =>
+            await runAction("Project reopened", () =>
               apiRequest(`/projects/${project.id}/reopen`, {
                 method: "POST",
                 body: { creator: HUMAN_WORKER, description },
@@ -2259,11 +2259,11 @@ function ProjectWorkspace({ projectId, runAction, setToast, confirmAction }) {
       )}
       {modal === "title" && (
         <TextActionModal
-          title="重命名项目"
-          label="项目名称"
+          title="Rename project"
+          label="Project name"
           multiline={false}
           defaultValue={project.title}
-          submitLabel="保存名称"
+          submitLabel="Save name"
           onClose={() => setModal(null)}
           onSubmit={submitTitle}
         />
@@ -2948,15 +2948,15 @@ function Inspector({ detail, campaign, selected, setSelected, tab, setTab, timel
   const goal = selected?.type === "goal" ? (detail.goals || []).find((item) => item.id === selected.id) : null;
   const finding = selected?.type === "finding" ? (detail.findings || []).find((item) => item.id === selected.id) : null;
   const tabs = [
-    ["details", "详情", null],
-    ["hints", "提示", detail.hints.length],
-    ["logs", "日志", steps.length],
-    ["timeline", "时间线", timeline.length],
+    ["details", "Details", null],
+    ["hints", "Hint", detail.hints.length],
+    ["logs", "Logs", steps.length],
+    ["timeline", "Timeline", timeline.length],
   ];
 
   const claimStep = async () => {
     if (!step) return;
-    await runAction("步骤已认领", () =>
+    await runAction("Step claimed", () =>
       apiRequest(`/projects/${detail.project.id}/steps/${step.id}/heartbeat`, {
         method: "POST",
         body: { worker: HUMAN_WORKER },
@@ -2967,7 +2967,7 @@ function Inspector({ detail, campaign, selected, setSelected, tab, setTab, timel
 
   const releaseStep = async () => {
     if (!step) return;
-    await runAction("步骤已释放", () =>
+    await runAction("Step released", () =>
       apiRequest(`/projects/${detail.project.id}/steps/${step.id}/release`, {
         method: "POST",
         body: { worker: step.worker || HUMAN_WORKER },
@@ -2992,14 +2992,14 @@ function Inspector({ detail, campaign, selected, setSelected, tab, setTab, timel
             {!selected && (
               <>
                 <div className="detail-card">
-                  <span>项目</span>
+                  <span>Projects</span>
                   <h3>{detail.project.title}</h3>
                   <p>{detail.project.id}</p>
                   <div className="detail-grid">
-                    <MiniStat label="事实" value={facts.length} />
-                    <MiniStat label="目标" value={(detail.goals || []).length} />
-                    <MiniStat label="步骤" value={steps.length} />
-                    <MiniStat label="发现" value={(detail.findings || []).length} />
+                    <MiniStat label="Fact" value={facts.length} />
+                    <MiniStat label="Goal" value={(detail.goals || []).length} />
+                    <MiniStat label="Step" value={steps.length} />
+                    <MiniStat label="Finding" value={(detail.findings || []).length} />
                   </div>
                 </div>
                 <ProjectCampaignPanel campaign={campaign} />
@@ -3007,33 +3007,33 @@ function Inspector({ detail, campaign, selected, setSelected, tab, setTab, timel
             )}
             {fact && (
               <div className="detail-card">
-                <span>事实</span>
+                <span>Fact</span>
                 <h3>{fact.id}</h3>
                 <p>{fact.description}</p>
               </div>
             )}
             {step && (
               <div className="detail-card">
-                <span>步骤</span>
+                <span>Step</span>
                 <h3>{step.id}</h3>
                 <p>{step.description}</p>
                 <div className="detail-meta">
-                  <span>来源：{(step.from || []).join(", ")}</span>
-                  <span>产出：{step.to || "未完成"}</span>
-                  <span>创建者：{step.creator}</span>
-                  <span>Worker：{step.worker || "未认领"}</span>
+                  <span>From: {(step.from || []).join(", ")}</span>
+                  <span>Result: {step.to || "Open"}</span>
+                  <span>Creator: {step.creator}</span>
+                  <span>Worker：{step.worker || "Unclaimed"}</span>
                 </div>
                 {!step.to && (
                   <div className="button-row">
                     {!step.worker ? (
                       <button className="primary-outline compact" type="button" onClick={claimStep}>
                         <Activity size={16} />
-                        认领
+                        Claim
                       </button>
                     ) : (
                       <button className="ghost-button compact" type="button" onClick={releaseStep}>
                         <Pause size={16} />
-                        释放
+                        Release
                       </button>
                     )}
                   </div>
@@ -3042,26 +3042,26 @@ function Inspector({ detail, campaign, selected, setSelected, tab, setTab, timel
             )}
             {goal && (
               <div className="detail-card">
-                <span>目标</span>
+                <span>Goal</span>
                 <h3>{goal.id}</h3>
                 <p>{goal.description}</p>
                 <div className="detail-meta">
-                  <span>状态：{goal.status}</span>
-                  <span>父目标：{goal.parent_goal_id || "顶层目标"}</span>
-                  <span>完成证据：{(goal.from || []).join(", ") || "暂无"}</span>
+                  <span>Status: {goal.status}</span>
+                  <span>Parent goal: {goal.parent_goal_id || "Top-level goal"}</span>
+                  <span>Evidence: {(goal.from || []).join(", ") || "None"}</span>
                 </div>
               </div>
             )}
             {finding && (
               <div className="detail-card">
-                <span>发现</span>
+                <span>Finding</span>
                 <h3>{finding.title || finding.id}</h3>
                 <p>{finding.description}</p>
                 <div className="detail-meta">
                   <span>ID：{finding.id}</span>
-                  <span>类型：{finding.kind}</span>
-                  <span>等级：{finding.severity}</span>
-                  <span>关联事实：{finding.fact_id || "暂无"}</span>
+                  <span>Type: {finding.kind}</span>
+                  <span>Severity: {finding.severity}</span>
+                  <span>Linked fact: {finding.fact_id || "None"}</span>
                 </div>
               </div>
             )}
@@ -3070,7 +3070,7 @@ function Inspector({ detail, campaign, selected, setSelected, tab, setTab, timel
         {tab === "hints" && (
           <div className="timeline-list">
             {detail.hints.length === 0 ? (
-              <EmptyState title="暂无提示" />
+              <EmptyState title="No hints" />
             ) : (
               detail.hints.map((hint) => (
                 <InspectorListItem
@@ -3102,7 +3102,7 @@ function Inspector({ detail, campaign, selected, setSelected, tab, setTab, timel
         {tab === "timeline" && (
           <div className="timeline-list">
             {timeline.length === 0 ? (
-              <EmptyState title="暂无时间线" />
+              <EmptyState title="No timeline" />
             ) : (
               timeline.map((event) => (
                 <InspectorListItem
@@ -3131,11 +3131,11 @@ function ProjectCampaignPanel({ campaign }) {
       <div className="detail-card project-campaign-card project-campaign-empty">
         <div className="project-campaign-head">
           <div>
-            <span>项目级研判</span>
-            <h3>摘要暂不可用</h3>
+            <span>Campaign judgment</span>
+            <h3>Summary unavailable</h3>
           </div>
         </div>
-        <p>当前项目还没有形成稳定的项目级主线摘要，或摘要接口暂时不可用。</p>
+        <p>This project has no stable campaign summary, or the summary service is unavailable.</p>
       </div>
     );
   }
@@ -3147,8 +3147,8 @@ function ProjectCampaignPanel({ campaign }) {
     <div className="detail-card project-campaign-card">
       <div className="project-campaign-head">
         <div>
-          <span>项目级研判</span>
-          <h3>当前主线</h3>
+          <span>Campaign judgment</span>
+          <h3>Current line</h3>
         </div>
         <div className="project-campaign-badges">
           <Badge tone={goalMeta.tone}>{goalMeta.label}</Badge>
@@ -3158,13 +3158,13 @@ function ProjectCampaignPanel({ campaign }) {
       <p className="project-campaign-lead">{campaign.lead}</p>
       <p className="project-campaign-summary">{campaign.summary}</p>
       <div className="detail-grid project-campaign-stats">
-        <MiniStat label="高价值漏洞" value={campaign.counts.high_value_vulnerabilities} />
-        <MiniStat label="开放步骤" value={campaign.counts.open_steps} />
-        <MiniStat label="阻塞项" value={campaign.blockers.length} />
-        <MiniStat label="下一步" value={campaign.next_steps.length} />
+        <MiniStat label="High-value findings" value={campaign.counts.high_value_vulnerabilities} />
+        <MiniStat label="Open steps" value={campaign.counts.open_steps} />
+        <MiniStat label="Blockers" value={campaign.blockers.length} />
+        <MiniStat label="Next steps" value={campaign.next_steps.length} />
       </div>
       {!!campaign.top_findings?.length && (
-        <CampaignListBlock title="强信号">
+        <CampaignListBlock title="Strong signals">
           {campaign.top_findings.map((finding) => (
             <article key={`${finding.source_type}-${finding.source_id}`} className="project-campaign-item">
               <div className="project-campaign-item-head">
@@ -3183,7 +3183,7 @@ function ProjectCampaignPanel({ campaign }) {
         </CampaignListBlock>
       )}
       {!!campaign.open_steps?.length && (
-        <CampaignListBlock title="待推进步骤">
+        <CampaignListBlock title="Steps to advance">
           {campaign.open_steps.map((item, index) => (
             <article key={`open-intent-${index}`} className="project-campaign-item">
               <strong>{item}</strong>
@@ -3192,7 +3192,7 @@ function ProjectCampaignPanel({ campaign }) {
         </CampaignListBlock>
       )}
       {!!campaign.blockers?.length && (
-        <CampaignListBlock title="当前阻塞">
+        <CampaignListBlock title="Current blockers">
           {campaign.blockers.map((item, index) => (
             <article key={`blocker-${index}`} className="project-campaign-item blocker">
               <strong>{item}</strong>
@@ -3201,7 +3201,7 @@ function ProjectCampaignPanel({ campaign }) {
         </CampaignListBlock>
       )}
       {!!campaign.next_steps?.length && (
-        <CampaignListBlock title="建议下一步">
+        <CampaignListBlock title="Suggested next steps">
           {campaign.next_steps.map((item, index) => (
             <article key={`next-step-${index}`} className="project-campaign-item next-step">
               <strong>{item}</strong>
@@ -3225,15 +3225,15 @@ function CampaignListBlock({ title, children }) {
 }
 
 function campaignGoalMeta(status) {
-  if (status === "achieved") return { label: "目标已达成", tone: "success" };
-  if (status === "in_progress") return { label: "主线推进中", tone: "warning" };
-  return { label: "当前受阻", tone: "danger" };
+  if (status === "achieved") return { label: "Goal achieved", tone: "success" };
+  if (status === "in_progress") return { label: "Campaign in progress", tone: "warning" };
+  return { label: "Currently blocked", tone: "danger" };
 }
 
 function projectStatusBadgeMeta(status) {
-  if (status === "completed") return { label: "项目已完成", tone: "info" };
-  if (status === "stopped") return { label: "项目已停止", tone: "warning" };
-  return { label: "项目运行中", tone: "success" };
+  if (status === "completed") return { label: "Project completed", tone: "info" };
+  if (status === "stopped") return { label: "Project stopped", tone: "warning" };
+  return { label: "Project running", tone: "success" };
 }
 
 function findingBadgeTone(severity) {
@@ -3251,15 +3251,15 @@ function findingConfidenceTone(confidence) {
 }
 
 function findingConfidenceLabel(confidence) {
-  if (confidence === "confirmed") return "已确认";
-  if (confidence === "supported") return "有支撑";
-  return "待核实";
+  if (confidence === "confirmed") return "Confirmed";
+  if (confidence === "supported") return "Supported";
+  return "Unverified";
 }
 
 function findingSourceLabel(sourceType) {
-  if (sourceType === "vulnerability") return "漏洞";
-  if (sourceType === "fact") return "事实";
-  return "提示";
+  if (sourceType === "vulnerability") return "Vulnerabilities";
+  if (sourceType === "fact") return "Fact";
+  return "Hint";
 }
 
 function IntentModal({ fromIds, facts, onClose, onSubmit }) {
@@ -3286,10 +3286,10 @@ function IntentModal({ fromIds, facts, onClose, onSubmit }) {
   };
 
   return (
-    <Modal title="新增执行步骤" onClose={onClose}>
+    <Modal title="New step" onClose={onClose}>
       <form className="stack-form modal-body" onSubmit={submit}>
         <label>
-          <span>来源事实</span>
+          <span>Source facts</span>
           <select
             multiple
             value={form.from}
@@ -3305,7 +3305,7 @@ function IntentModal({ fromIds, facts, onClose, onSubmit }) {
           </select>
         </label>
         <label>
-          <span>步骤描述</span>
+          <span>Step description</span>
           <textarea
             rows={5}
             value={form.description}
@@ -3314,16 +3314,16 @@ function IntentModal({ fromIds, facts, onClose, onSubmit }) {
           />
         </label>
         <label>
-          <span>直接认领给 Worker（可选）</span>
+          <span>Claim for a worker (optional)</span>
           <input value={form.worker} onChange={(event) => setForm({ ...form, worker: event.target.value })} />
         </label>
         <div className="modal-footer">
           <button className="ghost-button" type="button" onClick={onClose}>
-            取消
+            Cancel
           </button>
           <button className="primary-button compact" type="submit" disabled={saving || !form.from.length}>
             {saving ? <Loader2 className="spin" size={18} /> : <Plus size={18} />}
-            保存
+            Save
           </button>
         </div>
       </form>
@@ -3339,7 +3339,7 @@ function TextActionModal({
   defaultValue = "",
   multiline = true,
   placeholder,
-  submitLabel = "保存",
+  submitLabel = "Save",
 }) {
   const [text, setText] = useState(defaultValue);
   const [saving, setSaving] = useState(false);
@@ -3378,7 +3378,7 @@ function TextActionModal({
         </label>
         <div className="modal-footer">
           <button className="ghost-button" type="button" onClick={onClose}>
-            取消
+            Cancel
           </button>
           <button className="primary-button compact" type="submit" disabled={saving}>
             {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
@@ -3392,12 +3392,12 @@ function TextActionModal({
 
 function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
   const view = route?.view || "overview";
-  const severityViews = { critical: "严重漏洞", high: "高危漏洞", medium: "中危漏洞", low: "低危漏洞" };
-  const statusViews = { confirmed: "已确认漏洞", ignored: "已忽略漏洞" };
+  const severityViews = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
+  const statusViews = { confirmed: "Confirmed", ignored: "Ignored" };
   const viewTitle =
     view === "export-records"
-      ? "导出记录"
-      : severityViews[view] || statusViews[view] || "报告总览";
+      ? "Export history"
+      : severityViews[view] || statusViews[view] || "Report overview";
 
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -3449,7 +3449,7 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
       setProjects(projectList);
       setReportTemplates(templateList);
     } catch (error) {
-      if (!silent) setToast({ type: "danger", message: error.message || "漏洞报告加载失败" });
+      if (!silent) setToast({ type: "danger", message: error.message || "Could not load vulnerability reports" });
     } finally {
       if (!silent) setLoading(false);
     }
@@ -3475,18 +3475,18 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
   }, [load]);
 
   const refresh = async () => {
-    await runAction("漏洞报告已刷新", () => apiRequest("/api/vulnerabilities/refresh", { method: "POST" }));
+    await runAction("Vulnerability reports refreshed", () => apiRequest("/api/vulnerabilities/refresh", { method: "POST" }));
     await load();
   };
 
   const exportMd = async ({ selected = [], title = "vulnerabilities" }) => {
     if (!selected.length) {
-      setToast({ type: "warning", message: "请先选择要导出的漏洞" });
+      setToast({ type: "warning", message: "Select vulnerabilities to export" });
       return;
     }
     const params = new URLSearchParams({ format: "md" });
     params.set("vulnerability_ids", selected.join(","));
-    await runAction("MD 报告已生成", () => downloadFromApi(`/api/vulnerabilities/export?${params}`, `${title}.md`));
+    await runAction("Markdown report generated", () => downloadFromApi(`/api/vulnerabilities/export?${params}`, `${title}.md`));
   };
 
   const uploadReportTemplate = async (event) => {
@@ -3494,7 +3494,7 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
     event.target.value = "";
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".docx")) {
-      setToast({ type: "warning", message: "请选择 DOCX 报告模板" });
+      setToast({ type: "warning", message: "Choose a DOCX report template" });
       return;
     }
     setTemplateUploading(true);
@@ -3502,17 +3502,17 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
       const content = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || "");
-        reader.onerror = () => reject(new Error("模板读取失败"));
+        reader.onerror = () => reject(new Error("Could not read the template"));
         reader.readAsDataURL(file);
       });
       await apiRequest("/api/report-templates", {
         method: "POST",
         body: { name: file.name.replace(/\.docx$/i, ""), filename: file.name, content_base64: content },
       });
-      setToast({ type: "success", message: "报告 Agent 已识别并启用该模板" });
+      setToast({ type: "success", message: "The report agent recognized and enabled this template" });
       await load({ silent: true });
     } catch (error) {
-      setToast({ type: "danger", message: error.message || "报告模板导入失败" });
+      setToast({ type: "danger", message: error.message || "Could not import the report template" });
     } finally {
       setTemplateUploading(false);
     }
@@ -3521,24 +3521,24 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
   const exportTemplateReport = async () => {
     const active = reportTemplates.find((item) => item.is_active);
     if (!active) {
-      setToast({ type: "warning", message: "请先导入并启用 DOCX 报告模板" });
+      setToast({ type: "warning", message: "Import and enable a DOCX report template first" });
       return;
     }
     if (!filters.project_id) {
-      setToast({ type: "warning", message: "请先选择一个项目再生成客户报告" });
+      setToast({ type: "warning", message: "Select a project before generating a client report" });
       return;
     }
     const project = projects.find((item) => item.id === filters.project_id);
-    await runAction("客户报告已生成", () =>
+    await runAction("Client report generated", () =>
       downloadFromApi(
         `/api/report-templates/${encodeURIComponent(active.id)}/export?project_id=${encodeURIComponent(filters.project_id)}`,
-        `${project?.title || "渗透测试"}-渗透测试报告.docx`,
+        `${project?.title || "assessment"}-penetration-test-report.docx`,
       ),
     );
   };
 
   const updateVulnerabilityStatus = async (vuln, status) => {
-    const label = status === "ignored" ? "漏洞已标记为忽略" : "漏洞已恢复为已确认";
+    const label = status === "ignored" ? "Vulnerability marked ignored" : "Vulnerability restored to confirmed";
     await runAction(label, () =>
       apiRequest(`/api/vulnerabilities/${encodeURIComponent(vuln.id)}/status`, {
         method: "PATCH",
@@ -3550,10 +3550,10 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
 
   const updateSelectedStatus = async (status) => {
     if (!selectedIds.length) {
-      setToast({ type: "warning", message: "请先选择要处理的漏洞" });
+      setToast({ type: "warning", message: "Select vulnerabilities to update" });
       return;
     }
-    const label = status === "ignored" ? "已批量标记为忽略" : "已批量恢复为已确认";
+    const label = status === "ignored" ? "Marked ignored" : "Restored to confirmed";
     await runAction(label, () =>
       apiRequest("/api/vulnerabilities/batch/status", {
         method: "POST",
@@ -3608,9 +3608,9 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
     const sev = viewSeverity || filters.severity;
     if (sev) chips.push({ key: "severity", label: SEVERITY_META[sev]?.label || sev });
     const st = viewStatus || filters.status;
-    if (st) chips.push({ key: "status", label: st === "confirmed" ? "已确认" : "已忽略" });
-    if (filters.date_from) chips.push({ key: "date_from", label: `起 ${filters.date_from}` });
-    if (filters.date_to) chips.push({ key: "date_to", label: `止 ${filters.date_to}` });
+    if (st) chips.push({ key: "status", label: st === "confirmed" ? "Confirmed" : "Ignored" });
+    if (filters.date_from) chips.push({ key: "date_from", label: `From ${filters.date_from}` });
+    if (filters.date_to) chips.push({ key: "date_to", label: `To ${filters.date_to}` });
     return chips;
   }, [filters, projects, viewSeverity, viewStatus]);
 
@@ -3686,17 +3686,17 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
     <>
       <PageHeader
         compact
-        title={`漏洞报告 / ${viewTitle}`}
-        subtitle="查看和管理所有漏洞报告，跟踪漏洞处理进度和状态"
+        title={`Vulnerability reports / ${viewTitle}`}
+        subtitle="Review findings and track how they are handled"
         actions={<div className="button-row">
           <input ref={reportTemplateInputRef} type="file" accept=".docx" hidden onChange={uploadReportTemplate} />
           <button className="primary-outline compact" type="button" disabled={templateUploading} onClick={() => reportTemplateInputRef.current?.click()}>
             {templateUploading ? <Loader2 className="spin" size={17} /> : <FileText size={17} />}
-            导入报告模板
+            Import report template
           </button>
           <button className="primary-button compact report-export-button" type="button" onClick={exportTemplateReport}>
             <Download size={18} />
-            生成客户报告
+            Generate client report
           </button>
         </div>}
       />
@@ -3704,16 +3704,16 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
         <div className="notice-banner info">
           <FileText size={18} />
           <div>
-            <strong>{reportTemplates.find((item) => item.is_active)?.name || "尚未导入报告模板"}</strong>
-            <span>报告 Agent 根据项目当前已确认漏洞实时整理；项目暂停不会影响现有漏洞查看和导出。</span>
+            <strong>{reportTemplates.find((item) => item.is_active)?.name || "No report template imported"}</strong>
+            <span>The report agent organizes confirmed findings. Pausing a project does not block viewing or export.</span>
           </div>
         </div>
         <div className="report-summary-grid">
-          <VulnerabilitySummaryCard icon={ShieldAlert} label="严重漏洞" value={visibleSummary.critical || 0} tone="critical" />
-          <VulnerabilitySummaryCard icon={AlertTriangle} label="高危漏洞" value={visibleSummary.high || 0} tone="high" />
-          <VulnerabilitySummaryCard icon={AlertCircle} label="中危漏洞" value={visibleSummary.medium || 0} tone="medium" />
-          <VulnerabilitySummaryCard icon={ShieldCheck} label="低危漏洞" value={visibleSummary.low || 0} tone="low" />
-          <VulnerabilitySummaryCard icon={CheckCheck} label="已确认" value={statusDistribution.confirmed || 0} tone="success" />
+          <VulnerabilitySummaryCard icon={ShieldAlert} label="Critical" value={visibleSummary.critical || 0} tone="critical" />
+          <VulnerabilitySummaryCard icon={AlertTriangle} label="High" value={visibleSummary.high || 0} tone="high" />
+          <VulnerabilitySummaryCard icon={AlertCircle} label="Medium" value={visibleSummary.medium || 0} tone="medium" />
+          <VulnerabilitySummaryCard icon={ShieldCheck} label="Low" value={visibleSummary.low || 0} tone="low" />
+          <VulnerabilitySummaryCard icon={CheckCheck} label="Confirmed" value={statusDistribution.confirmed || 0} tone="success" />
         </div>
         <div className="vuln-filter-bar">
           <div className="vuln-search-row">
@@ -3722,13 +3722,13 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
               <input
                 value={filters.search}
                 onChange={(event) => setFilters({ ...filters, search: event.target.value })}
-                placeholder="搜索漏洞标题、编号、项目、标签..."
+                placeholder="Search title, id, project, tags..."
               />
               {filters.search && (
                 <button
                   type="button"
                   className="vuln-search-clear"
-                  aria-label="清除搜索"
+                  aria-label="Clear search"
                   onClick={() => setFilters((prev) => ({ ...prev, search: "" }))}
                 >
                   <X size={13} />
@@ -3737,8 +3737,8 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
             </label>
             <span className="vuln-result-count">
               {filteredVulnCount > 0
-                ? `${filteredVulnCount} 条结果`
-                : "无匹配结果"}
+                ? `${filteredVulnCount}  results`
+                : "No matches"}
             </span>
             <button
               className="ghost-button compact filter-reset"
@@ -3747,13 +3747,13 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
               onClick={() => setFilters({ severity: "", project_id: "", status: "", search: "", date_from: "", date_to: "" })}
             >
               <X size={14} />
-              重置
+              Reset
             </button>
           </div>
           <div className="vuln-filter-row">
             <label className="vuln-filter-field">
               <select value={filters.project_id} onChange={(event) => setFilters({ ...filters, project_id: event.target.value })}>
-                <option value="">项目</option>
+                <option value="">Projects</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.title}
@@ -3767,7 +3767,7 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
                 disabled={!!viewSeverity}
                 onChange={(event) => setFilters({ ...filters, severity: event.target.value })}
               >
-                <option value="">严重程度</option>
+                <option value="">Severity</option>
                 {Object.entries(SEVERITY_META).map(([key, meta]) => (
                   <option key={key} value={key}>
                     {meta.label}
@@ -3781,9 +3781,9 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
                 disabled={!!viewStatus}
                 onChange={(event) => setFilters({ ...filters, status: event.target.value })}
               >
-                <option value="">状态</option>
-                <option value="confirmed">已确认</option>
-                <option value="ignored">已忽略</option>
+                <option value="">Status</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="ignored">Ignored</option>
               </select>
             </label>
             <label className="vuln-filter-field vuln-date-field">
@@ -3807,7 +3807,7 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
                 type="button"
                 className="vuln-chip"
                 onClick={() => clearFilter(chip.key)}
-                title="点击移除该筛选"
+                title="Remove this filter"
               >
                 {chip.label}
                 <X size={12} />
@@ -3816,39 +3816,39 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
           </div>
         </div>
         {loading ? (
-          <EmptyState icon={Loader2} title="正在分析漏洞报告" />
+          <EmptyState icon={Loader2} title="Analyzing vulnerability reports" />
         ) : visibleVulnerabilities.length === 0 ? (
-          <EmptyState icon={CheckCircle2} title="没有匹配的漏洞" subtitle="当前筛选范围内尚未发现漏洞。" />
+          <EmptyState icon={CheckCircle2} title="No matching vulnerabilities" subtitle="Nothing in the current filter." />
         ) : (
           <article className="vuln-table-card vuln-table-card-full">
             <header className="vuln-table-title">
               <div>
-                <h2>漏洞列表</h2>
-                <p>点击单条漏洞查看证据、过程和证明数据包</p>
+                <h2>Vulnerabilities</h2>
+                <p>Open a finding to see evidence, the process, and proof packets</p>
               </div>
               <div className="button-row">
                 <button className="ghost-button compact" type="button" disabled={!pageIds.length} onClick={togglePageSelected}>
-                  {allPageSelected ? "取消本页" : "选择本页"}
+                  {allPageSelected ? "Clear page" : "Select page"}
                 </button>
                 <button className="ghost-button compact" type="button" disabled={!visibleIds.length} onClick={toggleVisibleSelected}>
-                  {allVisibleSelected ? "取消结果集" : "全选结果集"}
+                  {allVisibleSelected ? "Clear results" : "Select all results"}
                 </button>
               </div>
             </header>
             {selectedIds.length > 0 && (
               <div className="vuln-bulk-bar">
                 <div className="vuln-bulk-summary">
-                  <strong>已选 {selectedIds.length} 条</strong>
-                  <span>{allVisibleSelected ? "当前筛选结果已全选" : "可继续翻页追加选择"}</span>
+                  <strong>Selected {selectedIds.length}</strong>
+                  <span>{allVisibleSelected ? "All filtered results are selected" : "Turn the page to add more"}</span>
                 </div>
                 <div className="button-row vuln-bulk-actions">
                   <button className="ghost-button compact" type="button" onClick={() => updateSelectedStatus("confirmed")}>
                     <CheckCircle2 size={15} />
-                    批量确认
+                    Confirm selected
                   </button>
                   <button className="ghost-button compact warning" type="button" onClick={() => updateSelectedStatus("ignored")}>
                     <X size={15} />
-                    批量忽略
+                    Ignore selected
                   </button>
                   <button
                     className="primary-outline compact"
@@ -3856,10 +3856,10 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
                     onClick={() => exportMd({ selected: selectedIds, title: "rabbit-vulnerabilities-batch" })}
                   >
                     <Download size={15} />
-                    批量导出
+                    Export selected
                   </button>
                   <button className="ghost-button compact" type="button" onClick={() => setSelectedIds([])}>
-                    清空选择
+                    Clear selection
                   </button>
                 </div>
               </div>
@@ -3867,12 +3867,12 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
             <div className="vuln-table-scroll">
               <div className="vuln-table-head">
                 <span />
-                <span>漏洞名称</span>
-                <span>所属项目</span>
-                <span>严重程度</span>
-                <span>状态</span>
-                <span>发现时间</span>
-                <span>操作</span>
+                <span>Title</span>
+                <span>Project</span>
+                <span>Severity</span>
+                <span>Status</span>
+                <span>Discovered</span>
+                <span>Action</span>
               </div>
               <div className="vuln-table-body">
                 {pagedVulnerabilities.map((vuln) => (
@@ -3891,14 +3891,14 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
             </div>
             <footer className="vuln-table-footer">
               <span className="vuln-table-footer-meta">
-                共 {filteredVulnCount} 条{filteredVulnCount > 0 ? ` · 第 ${pageStart}-${pageEnd} 条` : ""}
+                {filteredVulnCount}{filteredVulnCount > 0 ? ` · ${pageStart}-${pageEnd}` : ""}
               </span>
               <div className="vuln-table-footer-controls">
                 <label className="pagination-size">
                   <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
                     {[10, 20, 50, 100].map((size) => (
                       <option key={size} value={size}>
-                        {size} 条/页
+                        {size} / page
                       </option>
                     ))}
                   </select>
@@ -3906,7 +3906,7 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
                 <div className="pagination">
                   <button
                     type="button"
-                    aria-label="上一页"
+                    aria-label="Previous"
                     disabled={currentPage <= 1}
                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                   >
@@ -3928,7 +3928,7 @@ function VulnerabilitiesPage({ route, runAction, setToast, confirmAction }) {
                   )}
                   <button
                     type="button"
-                    aria-label="下一页"
+                    aria-label="Next"
                     disabled={currentPage >= totalPages}
                     onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                   >
@@ -3963,7 +3963,7 @@ function ExportRecordsView({ setToast, confirmAction }) {
       const list = await apiRequest("/api/vulnerabilities/export-records");
       setRecords(Array.isArray(list) ? list : []);
     } catch (error) {
-      if (!silent) setToast({ type: "danger", message: error.message || "导出记录加载失败" });
+      if (!silent) setToast({ type: "danger", message: error.message || "Could not load export history" });
     } finally {
       if (!silent) setLoading(false);
     }
@@ -3989,10 +3989,10 @@ function ExportRecordsView({ setToast, confirmAction }) {
       if (record.severity) params.set("severity", record.severity);
       if (record.status) params.set("status", record.status);
       await downloadFromApi(`/api/vulnerabilities/export?${params}`, record.filename);
-      setToast({ type: "success", message: "已重新导出报告" });
+      setToast({ type: "success", message: "Report exported again" });
       await load({ silent: true });
     } catch (error) {
-      setToast({ type: "danger", message: error.message || "重新导出失败" });
+      setToast({ type: "danger", message: error.message || "Could not export again" });
     } finally {
       setBusyId(null);
     }
@@ -4000,35 +4000,35 @@ function ExportRecordsView({ setToast, confirmAction }) {
 
   const removeRecord = async (record) => {
     const ok = await confirmAction({
-      title: "删除导出记录",
-      message: `确认删除「${record.filename}」这条导出记录？`,
+      title: "Delete export record",
+      message: `Delete the export record "${record.filename}"?`,
       tone: "danger",
-      confirmLabel: "删除",
+      confirmLabel: "Delete",
     });
     if (!ok) return;
     try {
       await apiRequest(`/api/vulnerabilities/export-records/${record.id}`, { method: "DELETE" });
-      setToast({ type: "success", message: "记录已删除" });
+      setToast({ type: "success", message: "Record deleted" });
       await load({ silent: true });
     } catch (error) {
-      setToast({ type: "danger", message: error.message || "删除失败" });
+      setToast({ type: "danger", message: error.message || "Could not delete" });
     }
   };
 
   const clearAll = async () => {
     const ok = await confirmAction({
-      title: "清空导出记录",
-      message: "确认清空全部导出记录？此操作不可撤销。",
+      title: "Clear export history",
+      message: "Clear all export history? This cannot be undone.",
       tone: "danger",
-      confirmLabel: "清空",
+      confirmLabel: "Clear",
     });
     if (!ok) return;
     try {
       await apiRequest("/api/vulnerabilities/export-records", { method: "DELETE" });
-      setToast({ type: "success", message: "导出记录已清空" });
+      setToast({ type: "success", message: "Export history cleared" });
       await load({ silent: true });
     } catch (error) {
-      setToast({ type: "danger", message: error.message || "清空失败" });
+      setToast({ type: "danger", message: error.message || "Could not clear" });
     }
   };
 
@@ -4036,15 +4036,15 @@ function ExportRecordsView({ setToast, confirmAction }) {
     <>
       <PageHeader
         compact
-        title="漏洞报告 / 导出记录"
-        subtitle="查看历史导出操作，包括导出范围、格式和时间"
+        title="Vulnerability reports / Export history"
+        subtitle="Past exports, including scope, format, and time"
       />
       <section className="content-wrap vulnerability-report-page">
         <article className="vuln-table-card export-records-card">
           <header className="vuln-table-title">
             <div>
-              <h2>导出记录</h2>
-              <p>每次导出漏洞报告都会在此留痕</p>
+              <h2>Export history</h2>
+              <p>Each vulnerability export is recorded here</p>
             </div>
             <div className="button-row">
               <button
@@ -4054,27 +4054,27 @@ function ExportRecordsView({ setToast, confirmAction }) {
                 onClick={clearAll}
               >
                 <Trash2 size={15} />
-                清空记录
+                Clear history
               </button>
               <button className="ghost-button compact" type="button" onClick={() => load()}>
                 <RefreshCw size={15} />
-                刷新
+                Refresh
               </button>
             </div>
           </header>
           <div className="export-records-head">
-            <span>导出时间</span>
-            <span>范围</span>
-            <span>格式</span>
-            <span>漏洞数</span>
-            <span>文件名</span>
-            <span>操作</span>
+            <span>ExportTime</span>
+            <span>Scope</span>
+            <span>Format</span>
+            <span>Count</span>
+            <span>Filename</span>
+            <span>Action</span>
           </div>
           <div className="export-records-body">
             {loading ? (
-              <EmptyState icon={Loader2} title="正在加载导出记录" />
+              <EmptyState icon={Loader2} title="Loading export history" />
             ) : records.length === 0 ? (
-              <EmptyState icon={Download} title="暂无导出记录" subtitle="在漏洞列表中导出报告后，记录会显示在这里。" />
+              <EmptyState icon={Download} title="No exports yet" subtitle="Exports from the vulnerability list show up here." />
             ) : (
               records.map((record) => (
                 <div className="export-records-row" key={record.id}>
@@ -4090,8 +4090,8 @@ function ExportRecordsView({ setToast, confirmAction }) {
                     <button
                       className="table-action"
                       type="button"
-                      title="重新导出"
-                      aria-label="重新导出"
+                      title="Export again"
+                      aria-label="Export again"
                       disabled={busyId === record.id}
                       onClick={() => redownload(record)}
                     >
@@ -4100,8 +4100,8 @@ function ExportRecordsView({ setToast, confirmAction }) {
                     <button
                       className="table-action danger"
                       type="button"
-                      title="删除记录"
-                      aria-label="删除记录"
+                      title="Delete record"
+                      aria-label="Delete record"
                       onClick={() => removeRecord(record)}
                     >
                       <Trash2 size={15} />
@@ -4129,7 +4129,7 @@ function summarizeSeverity(items) {
 
 function buildVulnerabilityTrend(items) {
   // Build a fixed 7-day calendar window ending today (local time), so the
-  // chart always shows 近 7 天 even on days with no findings.
+  // chart always shows the last 7 days even on days with no findings.
   const dayKeys = [];
   const byKey = new Map();
   const now = new Date();
@@ -4199,10 +4199,10 @@ function buildStatusDistribution(items) {
 
 function VulnerabilityTrend({ data }) {
   const series = [
-    ["critical", "严重", "#ff375f"],
-    ["high", "高危", "#ff7a1a"],
-    ["medium", "中危", "#f5b700"],
-    ["low", "低危", "#0a84ff"],
+    ["critical", "Critical", "#ff375f"],
+    ["high", "High", "#ff7a1a"],
+    ["medium", "Medium", "#f5b700"],
+    ["low", "Low", "#0a84ff"],
   ];
   const hasData = data.some((item) => item.total > 0);
   const max = Math.max(1, ...data.flatMap((item) => series.map(([key]) => item[key] || 0)));
@@ -4216,14 +4216,14 @@ function VulnerabilityTrend({ data }) {
   return (
     <section className="vuln-analysis-card">
       <header>
-        <h3>漏洞趋势</h3>
-        <span>近 7 天</span>
+        <h3>Vulnerability trend</h3>
+        <span>Last 7 days</span>
       </header>
       {!hasData ? (
-        <p className="analysis-empty">近 7 天暂无新发现</p>
+        <p className="analysis-empty">No new findings in the last 7 days</p>
       ) : (
         <>
-          <svg className="trend-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="漏洞趋势">
+          <svg className="trend-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Vulnerability trend">
             {series.map(([key, label, color]) => (
               <polyline
                 key={key}
@@ -4273,12 +4273,12 @@ function SeverityTopList({ items, onSelect }) {
   return (
     <section className="vuln-analysis-card severity-top-card">
       <header>
-        <h3>严重漏洞 TOP 5</h3>
-        <span>{items.length} 条</span>
+        <h3>Top 5 critical findings</h3>
+        <span>{items.length}</span>
       </header>
       <div className="severity-top-list">
         {items.length === 0 ? (
-          <p className="analysis-empty">暂无漏洞</p>
+          <p className="analysis-empty">No vulnerabilities</p>
         ) : (
           items.map((item, index) => {
             const meta = SEVERITY_META[item.severity] || SEVERITY_META.low;
@@ -4313,14 +4313,14 @@ function VulnerabilityStatusDistribution({ data }) {
   return (
     <section className="vuln-analysis-card status-distribution-card">
       <header>
-        <h3>状态分布</h3>
-        <span>实时数据</span>
+        <h3>Status</h3>
+        <span>Live</span>
       </header>
       {total === 0 ? (
-        <p className="analysis-empty">暂无状态数据</p>
+        <p className="analysis-empty">No status data</p>
       ) : (
         <div className="status-distribution">
-          <svg viewBox="0 0 96 96" role="img" aria-label="漏洞状态分布">
+          <svg viewBox="0 0 96 96" role="img" aria-label="Vulnerability status">
             <circle className="donut-track" cx="48" cy="48" r={radius} />
             <circle
               className="donut-segment confirmed"
@@ -4341,18 +4341,18 @@ function VulnerabilityStatusDistribution({ data }) {
               {total}
             </text>
             <text x="48" y="59" textAnchor="middle" className="donut-caption">
-              总计
+              Total
             </text>
           </svg>
           <div className="status-distribution-list">
             <span>
               <i className="status-dot confirmed" />
-              已确认
+              Confirmed
               <strong>{confirmed}</strong>
             </span>
             <span>
               <i className="status-dot ignored" />
-              已忽略
+              Ignored
               <strong>{ignored}</strong>
             </span>
           </div>
@@ -4406,20 +4406,20 @@ function VulnerabilityItem({ vuln, selected, active, onSelect, onOpen, onExport,
           <Badge tone={meta.tone}>{meta.label}</Badge>
         </div>
         <div>
-          <Badge tone={ignored ? "muted" : "success"}>{ignored ? "已忽略" : "已确认"}</Badge>
+          <Badge tone={ignored ? "muted" : "success"}>{ignored ? "Ignored" : "Confirmed"}</Badge>
         </div>
         <time>{formatTime(vuln.discovered_at)}</time>
         <div className="button-row vuln-table-actions" onClick={(event) => event.stopPropagation()}>
-          <button className="table-inline-action detail" type="button" onClick={onOpen} title="查看详情" aria-label="查看详情">
+          <button className="table-inline-action detail" type="button" onClick={onOpen} title="View details" aria-label="View details">
             <Eye size={14} />
-            详情
+            Details
           </button>
           <button
             className="table-inline-action"
             type="button"
             onClick={onExport}
-            title="导出"
-            aria-label="导出"
+            title="Export"
+            aria-label="Export"
           >
             <Download size={14} />
           </button>
@@ -4427,8 +4427,8 @@ function VulnerabilityItem({ vuln, selected, active, onSelect, onOpen, onExport,
             className={cn("table-inline-action", ignored ? "success" : "warning")}
             type="button"
             onClick={() => onStatusChange(ignored ? "confirmed" : "ignored")}
-            title={ignored ? "恢复确认" : "设为忽略"}
-            aria-label={ignored ? "恢复确认" : "设为忽略"}
+            title={ignored ? "Restore" : "Ignore"}
+            aria-label={ignored ? "Restore" : "Ignore"}
           >
             {ignored ? <CheckCircle2 size={14} /> : <X size={14} />}
           </button>
@@ -4467,17 +4467,17 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
       const content = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || "");
-        reader.onerror = () => reject(new Error("截图读取失败"));
+        reader.onerror = () => reject(new Error("Could not read the screenshot"));
         reader.readAsDataURL(file);
       });
       await apiRequest(`/api/vulnerabilities/${encodeURIComponent(vuln.id)}/evidence/screenshot`, {
         method: "POST",
         body: { filename: file.name, mime_type: file.type, content_base64: content },
       });
-      setReportHint("证明截图已保存，生成客户报告时会自动插入。");
+      setReportHint("Screenshot saved. It will be inserted into the client report.");
       await loadScreenshotEvidence();
     } catch (error) {
-      setReportHint(error.message || "证明截图上传失败");
+      setReportHint(error.message || "Could not upload the screenshot");
     } finally {
       setScreenshotUploading(false);
     }
@@ -4497,7 +4497,7 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
 
   const regenerateReportDraft = useCallback(async () => {
     setReportRefreshing(true);
-    setReportHint("正在用模型重生成报告…");
+    setReportHint("Regenerating the report with the model…");
     try {
       const payload = await apiRequest(
         `/api/vulnerabilities/${encodeURIComponent(vuln.id)}/report?use_model=1`,
@@ -4505,15 +4505,15 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
       if (payload?.composer_source === "model") {
         setReportDraft(payload);
         setReportError("");
-        setReportHint(`已切换到 ${payload.composer_model || "模型"} 版`);
+        setReportHint(`Switched to ${payload.composer_model || "Model"} version`);
       } else {
-        setReportHint("模型暂未返回，当前保留模板版草稿。");
+        setReportHint("The model did not respond. The template draft is unchanged.");
       }
     } catch (error) {
       if (!reportDraft) {
-        setReportError(error.message || "报告草稿生成失败");
+        setReportError(error.message || "Could not generate the report draft");
       }
-      setReportHint("模型暂时不可用，当前保留模板版草稿。");
+      setReportHint("The model is unavailable. The template draft is unchanged.");
     } finally {
       setReportRefreshing(false);
     }
@@ -4539,15 +4539,15 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
         // Only fetch the template version on open — fast (~1s) and gives
         // the user something to read immediately. The LLM-enhanced version
         // (use_model=1) is slow (~80s on glm-5.2) and is triggered on demand
-        // by the "模型重生成" button, not auto-fired on every drawer open.
+        // by the "Regenerate with model" button, not auto-fired on every drawer open.
         const payload = await apiRequest(`/api/vulnerabilities/${encodeURIComponent(vuln.id)}/report`);
         if (cancelled) return;
         setReportDraft(payload);
-        setReportHint(payload?.composer_source === "model" ? `已切换到 ${payload.composer_model || "模型"} 版` : "模板草稿已就绪，点「模型重生成」可生成可复现脚本。");
+        setReportHint(payload?.composer_source === "model" ? `Switched to ${payload.composer_model || "Model"} version` : "Template draft is ready. Regenerate with the model to produce a reproducible script.");
       } catch (error) {
         if (cancelled) return;
         setReportDraft(null);
-        setReportError(error.message || "报告草稿生成失败");
+        setReportError(error.message || "Could not generate the report draft");
       } finally {
         if (!cancelled) {
           setReportLoading(false);
@@ -4571,7 +4571,7 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
         className="drawer-panel vulnerability-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label={`漏洞详情 ${vuln.fact_id}`}
+        aria-label={`Vulnerability ${vuln.fact_id}`}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="drawer-header">
@@ -4579,25 +4579,25 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
             <div className="drawer-kicker">
               <span className="drawer-fact-id">{vuln.fact_id}</span>
               <Badge tone={meta.tone}>{meta.label}</Badge>
-              <Badge tone={ignored ? "muted" : "success"}>{ignored ? "已忽略" : "已确认"}</Badge>
+              <Badge tone={ignored ? "muted" : "success"}>{ignored ? "Ignored" : "Confirmed"}</Badge>
             </div>
             <h2>{vuln.title}</h2>
             <p>
-              {vuln.project_name} · <span className="mono">{vuln.project_id}</span> · 发现于 {formatTime(vuln.discovered_at)}
+              {vuln.project_name} · <span className="mono">{vuln.project_id}</span> · Discovered {formatTime(vuln.discovered_at)}
             </p>
           </div>
-          <button className="icon-button drawer-close" type="button" onClick={onClose} aria-label="关闭详情">
+          <button className="icon-button drawer-close" type="button" onClick={onClose} aria-label="Close details">
             <X size={18} />
           </button>
         </header>
         <div className="drawer-body drawer-dual">
-          <nav className="drawer-anchor-nav" aria-label="漏洞详情导航">
-            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-narrative")}>交付草稿</button>
-            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-info")}>基本信息</button>
-            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-description")}>证明说明</button>
-            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-evidence")}>关键证据</button>
-            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-packets")}>证明数据包</button>
-            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-process")}>浮现过程</button>
+          <nav className="drawer-anchor-nav" aria-label="Vulnerability sections">
+            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-narrative")}>Delivery draft</button>
+            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-info")}>Overview</button>
+            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-description")}>Proof narrative</button>
+            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-evidence")}>Key evidence</button>
+            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-packets")}>Proof packets</button>
+            <button type="button" className="drawer-anchor-link" onClick={() => scrollDrawerTo("vuln-process")}>How it emerged</button>
           </nav>
           <div className="drawer-content">
             <section id="vuln-narrative" className="drawer-section">
@@ -4611,39 +4611,39 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
               />
             </section>
             <section id="vuln-info" className="drawer-section">
-              <h4>基本信息</h4>
+              <h4>Overview</h4>
               <div className="drawer-info-grid">
-                <InfoBox label="所属项目" value={`${vuln.project_name} (${vuln.project_id})`} />
-                <InfoBox label="确认事实" value={vuln.fact_id} />
-                <InfoBox label="来源步骤" value={vuln.source_step_id || vuln.source_intent_id || "-"} />
-                <InfoBox label="工作节点" value={vuln.source_worker || "-"} />
+                <InfoBox label="Project" value={`${vuln.project_name} (${vuln.project_id})`} />
+                <InfoBox label="Confirmed fact" value={vuln.fact_id} />
+                <InfoBox label="Source step" value={vuln.source_step_id || vuln.source_intent_id || "-"} />
+                <InfoBox label="Workers" value={vuln.source_worker || "-"} />
               </div>
             </section>
             <section id="vuln-description" className="drawer-section">
-              <h4>证明说明</h4>
-              <p className="soft-box">{vuln.description || "未记录"}</p>
+              <h4>Proof narrative</h4>
+              <p className="soft-box">{vuln.description || "Not recorded"}</p>
             </section>
             <section id="vuln-evidence" className="drawer-section">
               <div className="section-title-row">
-                <h4>关键证据</h4>
+                <h4>Key evidence</h4>
                 <input ref={screenshotInputRef} type="file" accept="image/png,image/jpeg" hidden onChange={uploadScreenshotEvidence} />
                 <button className="primary-outline compact" type="button" disabled={screenshotUploading} onClick={() => screenshotInputRef.current?.click()}>
                   {screenshotUploading ? <Loader2 className="spin" size={14} /> : <Eye size={14} />}
-                  添加证明截图
+                  Add a proof screenshot
                 </button>
               </div>
               <div className="evidence-list">
-                {(vuln.evidence?.length ? vuln.evidence : ["未记录"]).map((item, index) => (
+                {(vuln.evidence?.length ? vuln.evidence : ["Not recorded"]).map((item, index) => (
                   <p key={`${item}-${index}`}>{item}</p>
                 ))}
               </div>
-              {!!screenshotEvidence.length && <p className="muted-copy">已保存 {screenshotEvidence.length} 张证明截图，生成客户报告时自动插入。</p>}
+              {!!screenshotEvidence.length && <p className="muted-copy">Saved {screenshotEvidence.length} proof screenshots. They are inserted into the client report.</p>}
             </section>
             <section id="vuln-packets" className="drawer-section">
-              <h4>漏洞证明数据包</h4>
+              <h4>Proof packets</h4>
               <div className="packet-list">
                 {(vuln.proof_packets || []).length === 0 ? (
-                  <p className="soft-box">未记录证明数据包。</p>
+                  <p className="soft-box">No proof packet recorded.</p>
                 ) : (
                   vuln.proof_packets.map((packet, index) => (
                     <ProofPacket key={`${packet.title}-${index}`} packet={packet} index={index} />
@@ -4652,10 +4652,10 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
               </div>
             </section>
             <section id="vuln-process" className="drawer-section">
-              <h4>漏洞浮现过程</h4>
+              <h4>How it emerged</h4>
               <div className="process-list">
                 {(vuln.process || []).length === 0 ? (
-                  <p className="soft-box">未记录漏洞浮现过程。</p>
+                  <p className="soft-box">No emergence process recorded.</p>
                 ) : (
                   (vuln.process || []).map((step, index) => (
                     <article className="process-step" key={`${step.id}-${index}`}>
@@ -4663,7 +4663,7 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
                       <div className="process-body">
                         <div className="process-head">
                           <strong>
-                            {step.label || step.type || "过程"} {step.id || ""}
+                            {step.label || step.type || "Process"} {step.id || ""}
                           </strong>
                           {(step.worker || step.time) && (
                             <small>
@@ -4671,7 +4671,7 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
                             </small>
                           )}
                         </div>
-                        <p>{step.description || "无描述"}</p>
+                        <p>{step.description || "No description"}</p>
                       </div>
                     </article>
                   ))
@@ -4682,7 +4682,7 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
         </div>
         <footer className="drawer-footer">
           <button className="ghost-button compact" type="button" onClick={onClose}>
-            关闭
+            Close
           </button>
           <div className="drawer-footer-actions">
             <button
@@ -4692,11 +4692,11 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
               disabled={reportLoading || reportRefreshing}
             >
               {reportRefreshing ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
-              模型重生成
+              Regenerate with model
             </button>
             <button className="primary-outline compact" type="button" onClick={onExport}>
               <Download size={16} />
-              导出
+              Export
             </button>
             <button
               className={cn("ghost-button compact", ignored ? "success" : "warning")}
@@ -4704,7 +4704,7 @@ function VulnerabilityDrawer({ vuln, onClose, onExport, onStatusChange }) {
               onClick={() => onStatusChange(ignored ? "confirmed" : "ignored")}
             >
               {ignored ? <CheckCircle2 size={16} /> : <X size={16} />}
-              {ignored ? "恢复确认" : "设为忽略"}
+              {ignored ? "Restore" : "Ignore"}
             </button>
           </div>
         </footer>
@@ -4750,47 +4750,47 @@ function ProofPacket({ packet, index }) {
   return (
     <article className="packet-card">
       <header className="packet-head">
-        <strong>{packet.title || `证明 ${index + 1}`}</strong>
+        <strong>{packet.title || `Proof ${index + 1}`}</strong>
       </header>
       <div className="packet-block">
         <div className="packet-block-head">
-          <span>请求数据包</span>
+          <span>Request</span>
           <button
             type="button"
             className="packet-copy"
             onClick={() => copy("request", request)}
             disabled={!request}
-            aria-label="复制请求包"
+            aria-label="Copy request"
           >
             {copied === "request" ? <Check size={13} /> : <Copy size={13} />}
-            {copied === "request" ? "已复制" : "复制"}
+            {copied === "request" ? "Copied" : "Copy"}
           </button>
         </div>
-        <pre className={cn(!expanded && longRequest && "collapsed")}>{request || "未记录"}</pre>
+        <pre className={cn(!expanded && longRequest && "collapsed")}>{request || "Not recorded"}</pre>
         {longRequest && (
           <button type="button" className="packet-toggle" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? "收起" : `展开全部 (${request.split("\n").length} 行)`}
+            {expanded ? "Collapse" : `Expand all (${request.split("\n").length}  lines)`}
           </button>
         )}
       </div>
       <div className="packet-block">
         <div className="packet-block-head">
-          <span>响应/回显</span>
+          <span>Response</span>
           <button
             type="button"
             className="packet-copy"
             onClick={() => copy("response", response)}
             disabled={!response}
-            aria-label="复制响应包"
+            aria-label="Copy response"
           >
             {copied === "response" ? <Check size={13} /> : <Copy size={13} />}
-            {copied === "response" ? "已复制" : "复制"}
+            {copied === "response" ? "Copied" : "Copy"}
           </button>
         </div>
-        <pre className={cn(!expanded && longResponse && "collapsed")}>{response || "未记录"}</pre>
+        <pre className={cn(!expanded && longResponse && "collapsed")}>{response || "Not recorded"}</pre>
         {longResponse && (
           <button type="button" className="packet-toggle" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? "收起" : `展开全部 (${response.split("\n").length} 行)`}
+            {expanded ? "Collapse" : `Expand all (${response.split("\n").length}  lines)`}
           </button>
         )}
       </div>
@@ -4812,18 +4812,18 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
             ? "template"
             : "empty";
   const statusLabel = {
-    loading: "生成中",
-    error: "不可用",
-    model: `模型版 · ${report?.composer_model || "模型"}`,
-    enhancing: "模板已就绪 · 增强中",
-    template: "模板草稿",
-    empty: "等待生成",
+    loading: "Generating",
+    error: "Unavailable",
+    model: `Model · ${report?.composer_model || "Model"}`,
+    enhancing: "Template ready · enhancing",
+    template: "Template draft",
+    empty: "Waiting",
   }[statusChip];
   return (
     <section className="drawer-section report-draft-section">
       <div className="report-draft-head">
         <div className="report-draft-heading">
-          <h4>交付版报告草稿</h4>
+          <h4>Delivery draft</h4>
           <span className={cn("report-draft-chip", statusChip)}>{statusLabel}</span>
         </div>
         <button
@@ -4833,24 +4833,24 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
           disabled={loading || refreshing}
         >
           {refreshing ? <Loader2 className="spin" size={15} /> : <RefreshCw size={15} />}
-          模型重生成
+          Regenerate with model
         </button>
       </div>
       {!!hint && hint !== statusLabel && <small className="report-draft-hint">{hint}</small>}
       {loading ? (
         <div className="report-draft-card report-draft-loading">
           <Loader2 className="spin" size={16} />
-          <span>正在整理报告草稿…</span>
+          <span>Preparing the report draft…</span>
         </div>
       ) : error ? (
         <div className="report-draft-card report-draft-error">
-          <strong>报告草稿暂不可用</strong>
+          <strong>Report draft unavailable</strong>
           <p>{error}</p>
         </div>
       ) : !report ? (
         <div className="report-draft-card report-draft-error">
-          <strong>报告草稿暂不可用</strong>
-          <p>当前漏洞还没有形成可展示的交付版草稿。</p>
+          <strong>Report draft unavailable</strong>
+          <p>This finding does not have a delivery draft yet.</p>
         </div>
       ) : (
         <div className="report-draft-card">
@@ -4860,7 +4860,7 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
           </div>
           {!!report.attack_surface?.length && (
             <div className="report-draft-block">
-              <h5>攻击面</h5>
+              <h5>Attack surface</h5>
               <div className="report-draft-tags">
                 {report.attack_surface.map((item) => (
                   <span key={item}>{item}</span>
@@ -4869,15 +4869,15 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
             </div>
           )}
           <div className="report-draft-block">
-            <h5>漏洞证明</h5>
+            <h5>Proof</h5>
             <p>{report.vulnerability_proof}</p>
           </div>
           {!!report.exploit_script ? (
             <div className="report-draft-block">
-              <h5>利用脚本</h5>
+              <h5>Exploit script</h5>
               <div className="exploit-script-card">
                 <div className="exploit-script-head">
-                  <span>可复现 Python3 脚本</span>
+                  <span>Reproducible Python 3 script</span>
                   <button
                     type="button"
                     className="packet-copy"
@@ -4887,10 +4887,10 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
                         navigator.clipboard.writeText(text);
                       }
                     }}
-                    aria-label="复制脚本"
+                    aria-label="Copy script"
                   >
                     <Copy size={13} />
-                    复制
+                    Copy
                   </button>
                 </div>
                 <pre className="exploit-script-pre">{report.exploit_script.replace(/^```python\s*/, "").replace(/```\s*$/, "")}</pre>
@@ -4898,13 +4898,13 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
             </div>
           ) : (
             <div className="report-draft-block muted">
-              <h5>利用脚本</h5>
-              <p className="soft-box">此类型漏洞靠上方「漏洞证明」步骤即可复现，无需独立脚本。若需要脚本，点「模型重生成」让模型生成。</p>
+              <h5>Exploit script</h5>
+              <p className="soft-box">This finding can be reproduced from the proof steps above and does not need a separate script. Regenerate with the model if you want one.</p>
             </div>
           )}
           {!!report.proof_points?.length && (
             <div className="report-draft-block">
-              <h5>证明要点</h5>
+              <h5>Proof points</h5>
               <div className="report-draft-points">
                 {report.proof_points.map((point) => (
                   <article key={`${point.label}-${point.content}`}>
@@ -4917,17 +4917,17 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
           )}
           <div className="report-draft-two-col">
             <div className="report-draft-block">
-              <h5>影响结论</h5>
+              <h5>Impact</h5>
               <p>{report.impact}</p>
             </div>
             <div className="report-draft-block">
-              <h5>成因分析</h5>
+              <h5>Root cause</h5>
               <p>{report.root_cause}</p>
             </div>
           </div>
           {!!report.evidence_highlights?.length && (
             <div className="report-draft-block">
-              <h5>关键证据</h5>
+              <h5>Key evidence</h5>
               <ul className="report-draft-list">
                 {report.evidence_highlights.map((item) => (
                   <li key={item}>{item}</li>
@@ -4937,7 +4937,7 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
           )}
           {!!report.remediation?.length && (
             <div className="report-draft-block">
-              <h5>修复建议</h5>
+              <h5>Remediation</h5>
               <ul className="report-draft-list">
                 {report.remediation.map((item) => (
                   <li key={item}>{item}</li>
@@ -4947,7 +4947,7 @@ function VulnerabilityNarrativeCard({ report, loading, refreshing, error, hint, 
           )}
           {!!report.operator_notes?.length && (
             <div className="report-draft-block muted">
-              <h5>说明</h5>
+              <h5>Notes</h5>
               <ul className="report-draft-list">
                 {report.operator_notes.map((item) => (
                   <li key={item}>{item}</li>
@@ -4991,11 +4991,11 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
     try {
       const [statusList, configPayload, observabilityPayload] = await Promise.all([
         apiRequest("/api/workers").catch((error) => {
-          setToast({ type: "warning", message: error.message || "工作节点状态暂不可用" });
+          setToast({ type: "warning", message: error.message || "Worker status is unavailable" });
           return [];
         }),
         apiRequest("/api/workers/config").catch((error) => {
-          setToast({ type: "warning", message: error.message || "Worker 配置暂不可用" });
+          setToast({ type: "warning", message: error.message || "Worker configuration is unavailable" });
           return null;
         }),
         apiRequest("/api/workers/observability").catch(() => null),
@@ -5079,11 +5079,11 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
   }, [workerCards]);
   const statusTabs = useMemo(
     () => [
-      { key: "all", label: "全部", count: workerCounts.total, tone: "info" },
-      { key: "online", label: "在线", count: workerCounts.online, tone: "success" },
-      { key: "idle", label: "空闲", count: workerCounts.idle, tone: "info" },
-      { key: "offline", label: "离线", count: workerCounts.offline, tone: "danger" },
-      { key: "disabled", label: "已关闭", count: workerCounts.disabled, tone: "muted" },
+      { key: "all", label: "All", count: workerCounts.total, tone: "info" },
+      { key: "online", label: "Online", count: workerCounts.online, tone: "success" },
+      { key: "idle", label: "Idle", count: workerCounts.idle, tone: "info" },
+      { key: "offline", label: "Offline", count: workerCounts.offline, tone: "danger" },
+      { key: "disabled", label: "Disabled", count: workerCounts.disabled, tone: "muted" },
     ],
     [workerCounts],
   );
@@ -5104,7 +5104,7 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
       });
   }, [searchTerm, statusFilter, workerCards]);
 
-  const saveWorkers = async (nextWorkers, label = "Worker 配置已保存") => {
+  const saveWorkers = async (nextWorkers, label = "Worker configuration saved") => {
     const updated = await runAction(label, () =>
       apiRequest("/api/workers/config", { method: "PUT", body: { workers: nextWorkers } }),
     );
@@ -5115,7 +5115,7 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
   const setEnabled = async (worker, enabled) => {
     if (!config) return;
     const next = config.workers.map((item) => (item.name === worker.name ? { ...item, enabled } : item));
-    await saveWorkers(next, enabled ? "Worker 已启用" : "Worker 已关闭");
+    await saveWorkers(next, enabled ? "Worker enabled" : "Worker disabled");
   };
 
   const testWorker = async (worker) => {
@@ -5125,7 +5125,7 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
     );
     setToast({
       type: result.ok ? "success" : "danger",
-      message: result.ok ? `${result.worker_name} 连通性正常` : `${result.worker_name} 测试失败：${result.preview || result.stderr_preview}`,
+      message: result.ok ? `${result.worker_name} connectivity ok` : `${result.worker_name} test failed: ${result.preview || result.stderr_preview}`,
     });
   };
 
@@ -5148,20 +5148,20 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
     const next = exists
       ? config.workers.map((item) => (item.name === normalized.name ? normalized : item))
       : [...config.workers, normalized];
-    await saveWorkers(next, exists ? "Worker 已更新" : "Worker 已新增");
+    await saveWorkers(next, exists ? "Worker updated" : "Worker added");
     setEditor(null);
   };
 
   const deleteWorker = async (worker) => {
     if (!config) return;
     const ok = await confirmAction({
-      title: "删除工作节点",
-      message: `确认删除 Worker「${worker.name}」？`,
+      title: "Delete worker",
+      message: `Delete worker "${worker.name}"?`,
       tone: "danger",
-      confirmLabel: "删除",
+      confirmLabel: "Delete",
     });
     if (!ok) return;
-    await saveWorkers(config.workers.filter((item) => item.name !== worker.name), "Worker 已删除");
+    await saveWorkers(config.workers.filter((item) => item.name !== worker.name), "Worker deleted");
     setEditor(null);
   };
   const openEditorForWorker = (worker) => {
@@ -5193,8 +5193,8 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
       setToast({
         type: failed.length ? "warning" : "success",
         message: failed.length
-          ? `批量测试完成：${ok} 个正常，${failed.length} 个失败`
-          : `批量测试完成：${ok} 个 Worker 连通性正常`,
+          ? `Batch test finished: ${ok} ok, ${failed.length} failed`
+          : `Batch test finished: ${ok} workers connected`,
       });
     } finally {
       setBatchTesting(false);
@@ -5212,8 +5212,8 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                 <Monitor size={28} />
               </span>
               <div>
-                <h1>工作节点</h1>
-                <p>管理 Worker 实例、模型通道、任务执行状态与健康检查</p>
+                <h1>Workers</h1>
+                <p>Worker instances, model channels, task status, and health checks</p>
               </div>
             </div>
             <div className="workers-console-actions">
@@ -5222,7 +5222,7 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                 <input
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="搜索 Worker、模型、任务、标签..."
+                  placeholder="Search workers, models, tasks, tags..."
                 />
               </label>
               <button
@@ -5232,25 +5232,25 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                 onClick={() => setEditor(defaultWorkerDraft(config?.workers || []))}
               >
                 <Plus size={18} />
-                新增 Worker
+                Add worker
               </button>
               <button className="ghost-button compact" type="button" disabled={!filteredWorkers.length || batchTesting} onClick={testVisibleWorkers}>
                 <Activity size={16} />
-                {batchTesting ? "测试中" : "批量测试"}
+                {batchTesting ? "Testing" : "Test all"}
               </button>
               <button className="ghost-button compact" type="button" onClick={() => load({ background: true })} disabled={refreshing}>
                 <RefreshCw className={refreshing ? "spin" : ""} size={16} />
-                刷新
+                Refresh
               </button>
             </div>
           </div>
         {loading ? (
-          <EmptyState icon={Loader2} title="正在读取工作节点" />
+          <EmptyState icon={Loader2} title="Loading workers" />
         ) : visibleWorkers.length === 0 ? (
           <EmptyState
             icon={Bot}
-            title="暂无 Worker"
-            subtitle="新增 Worker 后，调度器会按优先级和并发配置分配任务。"
+            title="No workers"
+            subtitle="After you add a worker, the dispatcher assigns tasks by priority and concurrency."
             action={
               <button
                 className="primary-button compact"
@@ -5259,51 +5259,51 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                 onClick={() => setEditor(defaultWorkerDraft(config?.workers || []))}
               >
                 <Plus size={18} />
-                新增 Worker
+                Add worker
               </button>
             }
           />
         ) : (
           <>
             <div className="workers-overview-grid">
-              <WorkerOverviewCard tone="success" label="在线节点" value={workerCounts.online} subtitle="可接收任务" />
-              <WorkerOverviewCard tone="muted" label="离线节点" value={workerCounts.offline} subtitle="等待恢复" />
-              <WorkerOverviewCard tone="info" label="运行中任务" value={workerCounts.running} subtitle="当前执行中" />
-              <WorkerOverviewCard tone="violet" label="累计任务数" value={workerCounts.tasks} subtitle="已记录完成" />
+              <WorkerOverviewCard tone="success" label="Online" value={workerCounts.online} subtitle="Ready for tasks" />
+              <WorkerOverviewCard tone="muted" label="Offline" value={workerCounts.offline} subtitle="Waiting to recover" />
+              <WorkerOverviewCard tone="info" label="Running tasks" value={workerCounts.running} subtitle="Running now" />
+              <WorkerOverviewCard tone="violet" label="Tasks completed" value={workerCounts.tasks} subtitle="Recorded as finished" />
             </div>
             {observability && (
               <div className="workers-observability-grid">
                 <section className="workers-observability-card">
                   <header>
-                    <h3>调度容量</h3>
-                    <span>实时限制</span>
+                    <h3>Dispatch capacity</h3>
+                    <span>Live limits</span>
                   </header>
                   <div className="workers-observability-stats">
-                    <MiniStat label="最大并发" value={observability.summary?.max_workers || 0} />
-                    <MiniStat label="运行任务" value={observability.summary?.running_tasks || 0} />
-                    <MiniStat label="运行项目" value={observability.summary?.running_projects || 0} />
-                    <MiniStat label="项目并发上限" value={observability.summary?.max_project_workers || 0} />
+                    <MiniStat label="Max concurrency" value={observability.summary?.max_workers || 0} />
+                    <MiniStat label="Running tasks" value={observability.summary?.running_tasks || 0} />
+                    <MiniStat label="Running projects" value={observability.summary?.running_projects || 0} />
+                    <MiniStat label="Per-project limit" value={observability.summary?.max_project_workers || 0} />
                   </div>
                 </section>
                 <section className="workers-observability-card">
                   <header>
-                    <h3>最近结果</h3>
-                    <span>任务历史</span>
+                    <h3>Recent results</h3>
+                    <span>Task history</span>
                   </header>
                   <div className="workers-outcome-grid">
-                    <MiniStat label="成功" value={observability.outcomes?.success || 0} />
-                    <MiniStat label="失败" value={observability.outcomes?.failed || 0} />
-                    <MiniStat label="拒绝" value={observability.outcomes?.rejected || 0} />
-                    <MiniStat label="释放" value={observability.outcomes?.released || 0} />
+                    <MiniStat label="Success" value={observability.outcomes?.success || 0} />
+                    <MiniStat label="Failed" value={observability.outcomes?.failed || 0} />
+                    <MiniStat label="Rejected" value={observability.outcomes?.rejected || 0} />
+                    <MiniStat label="Release" value={observability.outcomes?.released || 0} />
                   </div>
                 </section>
                 <section className="workers-observability-card">
                   <header>
-                    <h3>任务类型</h3>
-                    <span>近 40 条</span>
+                    <h3>Task types</h3>
+                    <span>Last 40</span>
                   </header>
                   {(observability.task_mix || []).length === 0 ? (
-                    <p className="analysis-empty">暂无任务分布</p>
+                    <p className="analysis-empty">No task mix yet</p>
                   ) : (
                     <div className="workers-task-mix">
                       {observability.task_mix.map((item) => (
@@ -5317,8 +5317,8 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                 </section>
                 <section className="workers-observability-card">
                   <header>
-                    <h3>调度观察</h3>
-                    <span>{observability.rejections?.length ? `${observability.rejections.length} 条退避` : "运行中任务"}</span>
+                    <h3>Dispatch notes</h3>
+                    <span>{observability.rejections?.length ? `${observability.rejections.length} backoffs` : "Running tasks"}</span>
                   </header>
                   {(observability.rejections || []).length > 0 ? (
                     <div className="workers-observability-list">
@@ -5326,7 +5326,7 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                         <article key={`${item.worker_name}-${item.project_id}-${index}`}>
                           <strong>{item.worker_name}</strong>
                           <span>{item.project_name} · {item.task_type}</span>
-                          <small>{item.seconds_remaining ? `${Math.round(item.seconds_remaining)} 秒后重试` : "等待恢复"}</small>
+                          <small>{item.seconds_remaining ? `${Math.round(item.seconds_remaining)} s until you can retry` : "Waiting to recover"}</small>
                         </article>
                       ))}
                     </div>
@@ -5351,13 +5351,13 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                       ))}
                     </div>
                   ) : (
-                    <p className="analysis-empty">当前没有运行中任务或退避记录</p>
+                    <p className="analysis-empty">No running tasks or backoff records</p>
                   )}
                 </section>
               </div>
             )}
             <div className="workers-filter-bar">
-              <div className="workers-filter-tabs" role="tablist" aria-label="工作节点状态筛选">
+              <div className="workers-filter-tabs" role="tablist" aria-label="Filter workers by status">
                 {statusTabs.map((tab) => (
                   <button
                     key={tab.key}
@@ -5375,20 +5375,20 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
               <div className="workers-filter-controls">
                 <label className="workers-auto-refresh">
                   <span className={cn("workers-auto-indicator", autoRefresh && "on")} />
-                  自动刷新
+                  Auto-refresh
                   <button
                     className={cn("switch compact-switch", autoRefresh && "on")}
                     type="button"
                     onClick={() => setAutoRefresh((current) => !current)}
-                    aria-label={autoRefresh ? "关闭自动刷新" : "开启自动刷新"}
+                    aria-label={autoRefresh ? "Turn auto-refresh off" : "Turn auto-refresh on"}
                   >
                     <span />
                   </button>
                 </label>
                 <span className="workers-last-updated">
-                  {lastUpdated ? `更新于 ${lastUpdated.toLocaleTimeString("zh-CN")}` : "待更新"}
+                  {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString("en-US")}` : "Not updated yet"}
                 </span>
-                <div className="workers-view-toggle" role="tablist" aria-label="工作节点布局">
+                <div className="workers-view-toggle" role="tablist" aria-label="Worker layout">
                   <button
                     type="button"
                     role="tab"
@@ -5411,14 +5411,14 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
               </div>
             </div>
             {filteredWorkers.length === 0 ? (
-              <EmptyState icon={Search} title="没有匹配的工作节点" subtitle="调整关键字或状态筛选后再试。" />
+              <EmptyState icon={Search} title="No matching workers" subtitle="Change the query or status filter and try again." />
             ) : (
               <div className={cn("workers-node-grid", viewMode === "list" && "list")}>
                 {filteredWorkers.map((card) => {
                   const worker = card.worker;
                   const status = card.live;
                   const isExpanded = Boolean(expanded[worker.name]);
-                  const actionLabel = !card.isManaged ? "纳管" : worker.enabled === false ? "启用" : "关闭";
+                  const actionLabel = !card.isManaged ? "Adopt" : worker.enabled === false ? "Enable" : "Close";
                   return (
                     <article className="worker-node-card" key={worker.name}>
                       <div className="worker-node-card-head">
@@ -5427,7 +5427,7 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                           <div>
                             <div className="worker-node-title-row">
                               <h3>{worker.name}</h3>
-                              {!card.isManaged && <span className="worker-node-discovered">未纳管</span>}
+                              {!card.isManaged && <span className="worker-node-discovered">Unmanaged</span>}
                             </div>
                             <p>{card.worker.type} · {card.modelLabel}</p>
                           </div>
@@ -5449,25 +5449,25 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                           <strong>{card.runtimeLabel}</strong>
                         </div>
                         <div>
-                          <span>最近心跳</span>
+                          <span>Last heartbeat</span>
                           <strong>{card.heartbeatLabel}</strong>
                         </div>
                       </div>
                       <div className="worker-node-stats">
                         <div>
-                          <span>任务数</span>
+                          <span>Tasks</span>
                           <strong>{status.tasks_completed ?? 0}</strong>
                         </div>
                         <div>
-                          <span>平均耗时</span>
+                          <span>Avg duration</span>
                           <strong>{status.avg_duration_seconds ? `${status.avg_duration_seconds}s` : "-"}</strong>
                         </div>
                         <div>
-                          <span>最大并发</span>
+                          <span>Max concurrency</span>
                           <strong>{worker.max_running ?? 1}</strong>
                         </div>
                         <div>
-                          <span>优先级</span>
+                          <span>Priority</span>
                           <strong>{worker.priority ?? 0}</strong>
                         </div>
                       </div>
@@ -5488,24 +5488,24 @@ function WorkersPage({ runAction, setToast, confirmAction }) {
                         </button>
                         <button className="ghost-button compact" type="button" disabled={!config} onClick={() => testWorker(worker)}>
                           <Activity size={16} />
-                          测试
+                          Test
                         </button>
                         <button className="ghost-button compact" type="button" disabled={!config} onClick={() => openEditorForWorker(worker)}>
                           <Settings size={16} />
-                          编辑
+                          Edit
                         </button>
                         <button className="ghost-button compact" type="button" onClick={() => toggleHistory(worker.name)}>
                           <History size={16} />
-                          {isExpanded ? "隐藏历史" : "历史"}
+                          {isExpanded ? "Hide history" : "History"}
                         </button>
-                        <button className="worker-node-menu" type="button" onClick={() => openEditorForWorker(worker)} aria-label="更多操作">
+                        <button className="worker-node-menu" type="button" onClick={() => openEditorForWorker(worker)} aria-label="More actions">
                           <MoreVertical size={16} />
                         </button>
                       </div>
                       {isExpanded && (
                         <div className="history-list worker-node-history">
                           {(history[worker.name] || []).length === 0 ? (
-                            <p>该工作节点暂无任务历史记录。</p>
+                            <p>This worker has no task history yet.</p>
                           ) : (
                             history[worker.name].map((row, index) => (
                               <article key={`${row.started_at}-${index}`}>
@@ -5555,7 +5555,7 @@ function WorkerOverviewCard({ tone, label, value, subtitle }) {
 
 function workerModelLabel(worker) {
   const env = worker.env || {};
-  return env.ANTHROPIC_MODEL || env.CODEX_MODEL || env.PI_MODEL || "未配置模型";
+  return env.ANTHROPIC_MODEL || env.CODEX_MODEL || env.PI_MODEL || "No model configured";
 }
 
 function workerRuntimeLabel(worker) {
@@ -5678,14 +5678,14 @@ function WorkerEditor({ worker, onClose, onSave, onDelete }) {
   };
 
   return (
-    <Modal title="Worker 配置" subtitle="保存后由调度器验证并热更新，失败时原配置保持不变。" onClose={onClose} wide>
+    <Modal title="Worker configuration" subtitle="The dispatcher validates and hot-reloads this. The previous configuration stays if validation fails." onClose={onClose} wide>
       <form className="stack-form modal-body" onSubmit={submit}>
         <div className="two-col tight">
           <label>
-            <span>快速模板</span>
+            <span>Preset</span>
             <select defaultValue="" onChange={(event) => applyPreset(event.target.value)}>
               <option value="" disabled>
-                选择模型模板
+                Choose a model preset
               </option>
               {WORKER_PRESETS.map((preset) => (
                 <option key={preset.id} value={preset.id}>
@@ -5695,7 +5695,7 @@ function WorkerEditor({ worker, onClose, onSave, onDelete }) {
             </select>
           </label>
           <label className="switch-line">
-            <span>启用状态</span>
+            <span>Enabled</span>
             <button
               className={cn("switch", draft.enabled !== false && "on")}
               type="button"
@@ -5707,11 +5707,11 @@ function WorkerEditor({ worker, onClose, onSave, onDelete }) {
         </div>
         <div className="two-col tight">
           <label>
-            <span>名称</span>
+            <span>Name</span>
             <input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} required />
           </label>
           <label>
-            <span>类型</span>
+            <span>Type</span>
             <select
               value={draft.type}
               onChange={(event) => {
@@ -5728,7 +5728,7 @@ function WorkerEditor({ worker, onClose, onSave, onDelete }) {
         </div>
         <div className="three-col">
           <label>
-            <span>最大并发</span>
+            <span>Max concurrency</span>
             <input
               type="number"
               min="1"
@@ -5737,7 +5737,7 @@ function WorkerEditor({ worker, onClose, onSave, onDelete }) {
             />
           </label>
           <label>
-            <span>优先级</span>
+            <span>Priority</span>
             <input
               type="number"
               min="0"
@@ -5746,7 +5746,7 @@ function WorkerEditor({ worker, onClose, onSave, onDelete }) {
             />
           </label>
           <label>
-            <span>任务类型</span>
+            <span>Task types</span>
             <div className="checkbox-row">
               {TASK_TYPES.map((type) => (
                 <label key={type}>
@@ -5796,17 +5796,17 @@ function WorkerEditor({ worker, onClose, onSave, onDelete }) {
             {onDelete && (
               <button className="ghost-button danger" type="button" onClick={onDelete}>
                 <Trash2 size={16} />
-                删除 Worker
+                Delete worker
               </button>
             )}
           </div>
           <div className="button-row">
             <button className="ghost-button" type="button" onClick={onClose}>
-              取消
+              Cancel
             </button>
             <button className="primary-button compact" type="submit" disabled={saving}>
               {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-              保存配置
+              Save configuration
             </button>
           </div>
         </div>
@@ -5839,7 +5839,7 @@ function TemplatesPage({ runAction, setToast, confirmAction }) {
     try {
       setTemplates(await apiRequest("/api/templates"));
     } catch (error) {
-      setToast({ type: "danger", message: error.message || "模板加载失败" });
+      setToast({ type: "danger", message: error.message || "Could not load templates" });
     } finally {
       setLoading(false);
     }
@@ -5851,13 +5851,13 @@ function TemplatesPage({ runAction, setToast, confirmAction }) {
 
   const deleteTemplate = async (template) => {
     const ok = await confirmAction({
-      title: "删除模板",
-      message: `确认删除模板「${template.title}」？`,
+      title: "Delete template",
+      message: `Delete template "${template.title}"?`,
       tone: "danger",
-      confirmLabel: "删除",
+      confirmLabel: "Delete",
     });
     if (!ok) return;
-    await runAction("模板已删除", () => apiRequest(`/api/templates/${template.id}`, { method: "DELETE" }));
+    await runAction("Template deleted", () => apiRequest(`/api/templates/${template.id}`, { method: "DELETE" }));
     await load();
   };
 
@@ -5879,23 +5879,23 @@ function TemplatesPage({ runAction, setToast, confirmAction }) {
     <>
       <PageHeader
         icon={FileText}
-        title="模板"
-        subtitle="把常用目标、起点和提示保存成可复用项目模板"
+        title="Templates"
+        subtitle="Save a goal, origin, and hints as a reusable project template"
         actions={
           <>
             <button className="primary-outline" type="button" onClick={() => setNewTemplate(true)}>
               <Plus size={18} />
-              新建模板
+              New template
             </button>
             <button className="ghost-button" type="button" onClick={load}>
               <RefreshCw size={18} />
-              刷新
+              Refresh
             </button>
           </>
         }
       />
       <section className="content-wrap">
-        <div className="template-tabs" role="tablist" aria-label="模板分类">
+        <div className="template-tabs" role="tablist" aria-label="Template categories">
           {TEMPLATE_CATEGORIES.map((tab) => {
             const count = tab.key === "all" ? templates.length : categoryCounts[tab.key] || 0;
             return (
@@ -5914,16 +5914,16 @@ function TemplatesPage({ runAction, setToast, confirmAction }) {
           })}
         </div>
         {loading ? (
-          <EmptyState icon={Loader2} title="正在加载模板" />
+          <EmptyState icon={Loader2} title="Loading templates" />
         ) : visibleTemplates.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="该分类下暂无模板"
-            subtitle="切换分类查看其他模板，或新建一个自定义模板。"
+            title="No templates in this category"
+            subtitle="Switch category, or create a custom template."
             action={
               <button className="primary-button compact" type="button" onClick={() => setNewTemplate(true)}>
                 <Plus size={16} />
-                新建模板
+                New template
               </button>
             }
           />
@@ -5944,30 +5944,30 @@ function TemplatesPage({ runAction, setToast, confirmAction }) {
                       <div className="template-badges">
                         <Badge tone={catMeta.tone}>{catMeta.label}</Badge>
                         <Badge tone={template.is_builtin ? "info" : "success"}>
-                          {template.is_builtin ? "内置" : "自定义"}
+                          {template.is_builtin ? "Built-in" : "Custom"}
                         </Badge>
                       </div>
                     </div>
                   </header>
                   <p className="template-description">{template.goal}</p>
                   <div className="template-section">
-                    <span>起点</span>
+                    <span>Origin</span>
                     <p>{template.origin}</p>
                   </div>
                   <div className="template-foot">
                     <span className="template-meta">
                       <Sparkles size={14} />
-                      {hintCount ? `${hintCount} 条提示` : "无初始提示"}
+                      {hintCount ? `${hintCount} hints` : "No initial hints"}
                     </span>
                     <div className="card-actions">
                       <button className="primary-outline compact" type="button" onClick={() => setProjectTemplate(template)}>
                         <Plus size={16} />
-                        使用模板
+                        Use template
                       </button>
                       {!template.is_builtin && (
                         <button className="ghost-button compact danger" type="button" onClick={() => deleteTemplate(template)}>
                           <Trash2 size={16} />
-                          删除
+                          Delete
                         </button>
                       )}
                     </div>
@@ -5982,7 +5982,7 @@ function TemplatesPage({ runAction, setToast, confirmAction }) {
         <TemplateEditor
           onClose={() => setNewTemplate(false)}
           onSave={async (payload) => {
-            await runAction("模板已创建", () => apiRequest("/api/templates", { method: "POST", body: payload }));
+            await runAction("Template created", () => apiRequest("/api/templates", { method: "POST", body: payload }));
             setNewTemplate(false);
             await load();
           }}
@@ -6004,20 +6004,20 @@ function TemplatesPage({ runAction, setToast, confirmAction }) {
 }
 
 const TEMPLATE_CATEGORIES = [
-  { key: "all", label: "全部模板" },
-  { key: "web", label: "Web渗透" },
-  { key: "internal", label: "内网渗透" },
-  { key: "recon", label: "信息收集" },
-  { key: "ctf", label: "CTF挑战" },
-  { key: "custom", label: "自定义" },
+  { key: "all", label: "All templates" },
+  { key: "web", label: "Web" },
+  { key: "internal", label: "Internal" },
+  { key: "recon", label: "Recon" },
+  { key: "ctf", label: "CTF" },
+  { key: "custom", label: "Custom" },
 ];
 
 const TEMPLATE_CATEGORY_META = {
-  web: { label: "Web渗透", tone: "info" },
-  internal: { label: "内网渗透", tone: "high" },
-  recon: { label: "信息收集", tone: "medium" },
-  ctf: { label: "CTF挑战", tone: "critical" },
-  custom: { label: "自定义", tone: "success" },
+  web: { label: "Web", tone: "info" },
+  internal: { label: "Internal", tone: "high" },
+  recon: { label: "Recon", tone: "medium" },
+  ctf: { label: "CTF", tone: "critical" },
+  custom: { label: "Custom", tone: "success" },
 };
 
 // Presentational-only category grouping derived from the template's own text.
@@ -6028,8 +6028,8 @@ function templateCategory(template) {
   const text = `${template.title || ""} ${template.origin || ""} ${template.goal || ""}`;
   if (/CTF/i.test(text)) return "ctf";
   if (/web/i.test(text)) return "web";
-  if (text.includes("内网")) return "internal";
-  if (text.includes("外网") || text.includes("信息收集") || text.includes("侦察")) return "recon";
+  if (/internal|intranet/i.test(text)) return "internal";
+  if (/external|recon|reconnaissance/i.test(text)) return "recon";
   return "web";
 }
 
@@ -6052,33 +6052,33 @@ function TemplateEditor({ onClose, onSave }) {
   };
 
   return (
-    <Modal title="新建模板" onClose={onClose} wide>
+    <Modal title="New template" onClose={onClose} wide>
       <form className="stack-form modal-body" onSubmit={submit}>
         <label>
-          <span>模板名称</span>
+          <span>Template name</span>
           <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
         </label>
         <div className="two-col">
           <label>
-            <span>起点</span>
+            <span>Origin</span>
             <textarea rows={6} value={form.origin} onChange={(event) => setForm({ ...form, origin: event.target.value })} required />
           </label>
           <label>
-            <span>目标</span>
+            <span>Goal</span>
             <textarea rows={6} value={form.goal} onChange={(event) => setForm({ ...form, goal: event.target.value })} required />
           </label>
         </div>
         <label>
-          <span>提示</span>
+          <span>Hint</span>
           <textarea rows={4} value={form.hints} onChange={(event) => setForm({ ...form, hints: event.target.value })} />
         </label>
         <div className="modal-footer">
           <button className="ghost-button" type="button" onClick={onClose}>
-            取消
+            Cancel
           </button>
           <button className="primary-button compact" type="submit" disabled={saving}>
             {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-            保存模板
+            Save template
           </button>
         </div>
       </form>
@@ -6092,10 +6092,10 @@ function PasswordModal({ onClose, runAction }) {
   const [saving, setSaving] = useState(false);
 
   const rules = [
-    { key: "len", label: "至少 8 个字符", ok: form.new_password.length >= 8 },
-    { key: "case", label: "包含大小写字母", ok: /[a-z]/.test(form.new_password) && /[A-Z]/.test(form.new_password) },
-    { key: "num", label: "包含数字", ok: /\d/.test(form.new_password) },
-    { key: "sym", label: "包含特殊字符", ok: /[^A-Za-z0-9]/.test(form.new_password) },
+    { key: "len", label: "At least 8 characters", ok: form.new_password.length >= 8 },
+    { key: "case", label: "Upper and lower case", ok: /[a-z]/.test(form.new_password) && /[A-Z]/.test(form.new_password) },
+    { key: "num", label: "A number", ok: /\d/.test(form.new_password) },
+    { key: "sym", label: "A symbol", ok: /[^A-Za-z0-9]/.test(form.new_password) },
   ];
   const allOk = rules.every((rule) => rule.ok);
   const matched = form.confirm_password.length > 0 && form.new_password === form.confirm_password;
@@ -6106,7 +6106,7 @@ function PasswordModal({ onClose, runAction }) {
     if (!canSubmit) return;
     setSaving(true);
     try {
-      await runAction("密码已修改", () =>
+      await runAction("Password changed", () =>
         apiRequest("/api/auth/password", {
           method: "PUT",
           body: {
@@ -6122,56 +6122,56 @@ function PasswordModal({ onClose, runAction }) {
   };
 
   return (
-    <Modal title="修改密码" subtitle="为账号设置一个更安全的新密码" onClose={onClose}>
+    <Modal title="Change password" subtitle="Set a stronger password for this account" onClose={onClose}>
       <form className="stack-form modal-body password-form" onSubmit={submit}>
         <label>
-          <span>当前密码</span>
+          <span>Current password</span>
           <div className="input-affix">
             <KeyRound size={16} className="affix-icon" />
             <input
               type={show.current ? "text" : "password"}
               value={form.current_password}
               onChange={(event) => setForm({ ...form, current_password: event.target.value })}
-              placeholder="请输入当前密码"
+              placeholder="Current password"
               autoComplete="current-password"
               required
             />
-            <button type="button" className="affix-toggle" onClick={() => setShow({ ...show, current: !show.current })} aria-label="显示/隐藏密码">
+            <button type="button" className="affix-toggle" onClick={() => setShow({ ...show, current: !show.current })} aria-label="Show or hide password">
               {show.current ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </label>
         <label>
-          <span>新密码</span>
+          <span>New password</span>
           <div className="input-affix">
             <Lock size={16} className="affix-icon" />
             <input
               type={show.next ? "text" : "password"}
               value={form.new_password}
               onChange={(event) => setForm({ ...form, new_password: event.target.value })}
-              placeholder="请输入新密码"
+              placeholder="New password"
               autoComplete="new-password"
               required
             />
-            <button type="button" className="affix-toggle" onClick={() => setShow({ ...show, next: !show.next })} aria-label="显示/隐藏密码">
+            <button type="button" className="affix-toggle" onClick={() => setShow({ ...show, next: !show.next })} aria-label="Show or hide password">
               {show.next ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </label>
         <label>
-          <span>确认新密码</span>
+          <span>Confirm new password</span>
           <div className="input-affix">
             <Lock size={16} className="affix-icon" />
             <input
               type={show.next ? "text" : "password"}
               value={form.confirm_password}
               onChange={(event) => setForm({ ...form, confirm_password: event.target.value })}
-              placeholder="请再次输入新密码"
+              placeholder="Re-enter the new password"
               autoComplete="new-password"
               required
             />
           </div>
-          {form.confirm_password.length > 0 && !matched && <small className="field-hint danger">两次输入的密码不一致</small>}
+          {form.confirm_password.length > 0 && !matched && <small className="field-hint danger">The passwords do not match</small>}
         </label>
         <ul className="password-rules">
           {rules.map((rule) => (
@@ -6183,11 +6183,11 @@ function PasswordModal({ onClose, runAction }) {
         </ul>
         <div className="modal-footer">
           <button className="ghost-button" type="button" onClick={onClose}>
-            取消
+            Cancel
           </button>
           <button className="primary-button compact" type="submit" disabled={!canSubmit}>
             {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-            保存
+            Save
           </button>
         </div>
       </form>
@@ -6242,7 +6242,7 @@ function SettingsModal({ onClose, runAction }) {
     event.preventDefault();
     setSaving(true);
     try {
-      await runAction("设置已保存", () => apiRequest("/settings", { method: "PUT", body: settings }));
+      await runAction("Settings saved", () => apiRequest("/settings", { method: "PUT", body: settings }));
       await loadHealth();
     } finally {
       setSaving(false);
@@ -6252,7 +6252,7 @@ function SettingsModal({ onClose, runAction }) {
   const runCleanup = async () => {
     setCleaning(true);
     try {
-      await runAction("系统清理已完成", () => apiRequest("/settings/cleanup", { method: "POST" }));
+      await runAction("Cleanup finished", () => apiRequest("/settings/cleanup", { method: "POST" }));
       await loadHealth();
     } finally {
       setCleaning(false);
@@ -6264,59 +6264,59 @@ function SettingsModal({ onClose, runAction }) {
   };
 
   const healthTone = (status) => (status === "error" ? "danger" : status === "warning" ? "high" : "success");
-  const healthLabel = (status) => (status === "error" ? "异常" : status === "warning" ? "告警" : "正常");
+  const healthLabel = (status) => (status === "error" ? "Error" : status === "warning" ? "Warning" : "Healthy");
 
   return (
     <Modal
-      title="系统设置"
-      subtitle="统一管理调度、安全策略、历史保留周期和系统健康检查。"
+      title="Settings"
+      subtitle="Dispatch, security policy, retention, and health checks."
       onClose={onClose}
       wide
     >
       {!settings ? (
-        <EmptyState icon={Loader2} title="正在读取设置" />
+        <EmptyState icon={Loader2} title="Loading settings" />
       ) : (
         <form className="stack-form modal-body settings-shell" onSubmit={submit}>
           <section className="settings-section">
             <div className="settings-section-head">
               <div>
-                <h3>运行控制</h3>
-                <p>只影响调度节奏与冷却策略，不改项目和 Worker 配置结构。</p>
+                <h3>Runtime</h3>
+                <p>Changes dispatch timing and cooldown only. Projects and workers stay as they are.</p>
               </div>
-              <Badge tone="info">调度</Badge>
+              <Badge tone="info">Dispatch</Badge>
             </div>
             <div className="two-col">
               <label>
-                <span>Step 超时（秒）</span>
+                <span>Step timeout (seconds)</span>
                 <input type="number" min="5" value={settings.step_timeout} onChange={(event) => setNumber("step_timeout", event.target.value)} />
-                <small className="field-hint">Step 在被回收前允许等待的最长时间。</small>
+                <small className="field-hint">How long a step may wait before it is reclaimed.</small>
               </label>
               <label>
-                <span>Decide 超时（秒）</span>
+                <span>Decide timeout (seconds)</span>
                 <input type="number" min="5" value={settings.decide_timeout} onChange={(event) => setNumber("decide_timeout", event.target.value)} />
-                <small className="field-hint">Decide 阶段在判定超时前的最长执行时间。</small>
+                <small className="field-hint">How long Decide may run before it times out.</small>
               </label>
             </div>
             <div className="two-col">
               <label>
-                <span>Worker 不健康冷却（秒）</span>
+                <span>Unhealthy worker cooldown (seconds)</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.worker_unhealthy_retry_after_seconds}
                   onChange={(event) => setNumber("worker_unhealthy_retry_after_seconds", event.target.value)}
                 />
-                <small className="field-hint">Worker 健康检查失败后，重新参与调度前的冷却时间。</small>
+                <small className="field-hint">How long a failed health check keeps a worker out of dispatch.</small>
               </label>
               <label>
-                <span>拒绝任务重试间隔（秒）</span>
+                <span>Rejected-task retry interval (seconds)</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.worker_rejected_retry_after_seconds}
                   onChange={(event) => setNumber("worker_rejected_retry_after_seconds", event.target.value)}
                 />
-                <small className="field-hint">同一 Worker 暂时拒绝任务后，再次尝试分配的等待时间。</small>
+                <small className="field-hint">How long to wait before offering a task to a worker that just rejected one.</small>
               </label>
             </div>
           </section>
@@ -6324,41 +6324,41 @@ function SettingsModal({ onClose, runAction }) {
           <section className="settings-section">
             <div className="settings-section-head">
               <div>
-                <h3>认证与会话</h3>
-                <p>控制登录失败锁定、会话寿命和浏览器认证窗口。</p>
+                <h3>Authentication and sessions</h3>
+                <p>Lockout, session lifetime, and the browser auth window.</p>
               </div>
-              <Badge tone="success">安全</Badge>
+              <Badge tone="success">Security</Badge>
             </div>
             <div className="three-col">
               <label>
-                <span>失败锁定阈值</span>
+                <span>Lockout threshold</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.max_failed_login_attempts}
                   onChange={(event) => setNumber("max_failed_login_attempts", event.target.value)}
                 />
-                <small className="field-hint">同一账号在窗口期内允许的最大失败次数。</small>
+                <small className="field-hint">Maximum failures for one account inside the window.</small>
               </label>
               <label>
-                <span>限流窗口（分钟）</span>
+                <span>Rate-limit window (minutes)</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.rate_limit_window_minutes}
                   onChange={(event) => setNumber("rate_limit_window_minutes", event.target.value)}
                 />
-                <small className="field-hint">超过失败阈值后，窗口期内继续登录会被直接拦截。</small>
+                <small className="field-hint">Further sign-in attempts are blocked for the rest of the window.</small>
               </label>
               <label>
-                <span>Session 时长（小时）</span>
+                <span>Session length (hours)</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.session_duration_hours}
                   onChange={(event) => setNumber("session_duration_hours", event.target.value)}
                 />
-                <small className="field-hint">有效会话的滑动过期时间。</small>
+                <small className="field-hint">Sliding expiry for a valid session.</small>
               </label>
             </div>
           </section>
@@ -6366,57 +6366,57 @@ function SettingsModal({ onClose, runAction }) {
           <section className="settings-section">
             <div className="settings-section-head">
               <div>
-                <h3>保留与清理</h3>
-                <p>只清理历史记录、导出记录和已读通知，不触碰项目事实、目标、步骤和发现数据。</p>
+                <h3>Retention and cleanup</h3>
+                <p>Clears history, export records, and read notifications. Facts, goals, steps, and findings stay.</p>
               </div>
-              <Badge tone="medium">维护</Badge>
+              <Badge tone="medium">Maintenance</Badge>
             </div>
             <div className="three-col">
               <label>
-                <span>日志保留（天）</span>
+                <span>Log retention (days)</span>
                 <input type="number" min="1" value={settings.log_retention_days} onChange={(event) => setNumber("log_retention_days", event.target.value)} />
-                <small className="field-hint">用于审计日志、Worker 历史和登录尝试记录。</small>
+                <small className="field-hint">Audit log, worker history, and sign-in attempts.</small>
               </label>
               <label>
-                <span>导出记录保留（天）</span>
+                <span>Export retention (days)</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.export_retention_days}
                   onChange={(event) => setNumber("export_retention_days", event.target.value)}
                 />
-                <small className="field-hint">只清理导出历史记录，不影响实时导出功能。</small>
+                <small className="field-hint">Clears export history only. Export itself still works.</small>
               </label>
               <label>
-                <span>通知保留（天）</span>
+                <span>Notification retention (days)</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.notification_retention_days}
                   onChange={(event) => setNumber("notification_retention_days", event.target.value)}
                 />
-                <small className="field-hint">仅清理已读通知，未读通知会保留。</small>
+                <small className="field-hint">Clears read notifications. Unread ones stay.</small>
               </label>
             </div>
             <div className="two-col">
               <label>
-                <span>项目无进展告警（小时）</span>
+                <span>Idle project alert (hours)</span>
                 <input
                   type="number"
                   min="1"
                   value={settings.project_idle_alert_hours}
                   onChange={(event) => setNumber("project_idle_alert_hours", event.target.value)}
                 />
-                <small className="field-hint">活动项目最近无新增事实、提示、步骤或 Decide 心跳时触发告警。</small>
+                <small className="field-hint">Alerts when an active project has no new fact, hint, step, or Decide heartbeat.</small>
               </label>
               <div className="settings-action-card">
                 <div>
-                  <strong>立即清理历史数据</strong>
-                  <p>按当前保留策略删除过期日志、已读通知、导出记录和失效会话。</p>
+                  <strong>Clean history now</strong>
+                  <p>Deletes expired logs, read notifications, export records, and dead sessions using the current policy.</p>
                 </div>
                 <button className="ghost-button compact" type="button" onClick={runCleanup} disabled={cleaning}>
                   {cleaning ? <Loader2 className="spin" size={16} /> : <Trash2 size={16} />}
-                  立即清理
+                  Clean now
                 </button>
               </div>
             </div>
@@ -6425,12 +6425,12 @@ function SettingsModal({ onClose, runAction }) {
           <section className="settings-section">
             <div className="settings-section-head">
               <div>
-                <h3>系统健康</h3>
-                <p>查看当前 API、数据库、调度器和 Worker 的整体状态。</p>
+                <h3>System health</h3>
+                <p>API, database, dispatcher, and worker status.</p>
               </div>
               <button className="ghost-button compact" type="button" onClick={loadHealth} disabled={healthLoading}>
                 {healthLoading ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
-                刷新状态
+                Refresh status
               </button>
             </div>
 
@@ -6438,24 +6438,24 @@ function SettingsModal({ onClose, runAction }) {
               <>
                 <div className="settings-health-grid">
                   <article className={cn("settings-health-card", health.summary.status)}>
-                    <span>系统状态</span>
+                    <span>System status</span>
                     <strong>{healthLabel(health.summary.status)}</strong>
-                    <small>更新时间 {formatTime(health.generated_at)}</small>
+                    <small>Updated {formatTime(health.generated_at)}</small>
                   </article>
                   <article className="settings-health-card">
-                    <span>活动项目</span>
+                    <span>Active projects</span>
                     <strong>{health.summary.active_projects}</strong>
-                    <small>项目总数 {health.stats.projects}</small>
+                    <small>Projects {health.stats.projects}</small>
                   </article>
                   <article className="settings-health-card">
-                    <span>在线 Worker</span>
+                    <span>Online workers</span>
                     <strong>{health.summary.online_workers}</strong>
-                    <small>离线 {health.summary.offline_workers}</small>
+                    <small>Offline {health.summary.offline_workers}</small>
                   </article>
                   <article className="settings-health-card">
-                    <span>未读通知</span>
+                    <span>Unread notifications</span>
                     <strong>{health.stats.notifications_unread}</strong>
-                    <small>审计日志 {health.stats.audit_entries}</small>
+                    <small>Audit log {health.stats.audit_entries}</small>
                   </article>
                 </div>
 
@@ -6474,11 +6474,11 @@ function SettingsModal({ onClose, runAction }) {
 
                 <div className="settings-alert-block">
                   <div className="settings-alert-head">
-                    <strong>告警与提醒</strong>
-                    <span>{health.alerts.length} 条</span>
+                    <strong>Alerts</strong>
+                    <span>{health.alerts.length}</span>
                   </div>
                   {health.alerts.length === 0 ? (
-                    <div className="soft-box">当前没有需要处理的系统级告警。</div>
+                    <div className="soft-box">No system alerts need attention.</div>
                   ) : (
                     <div className="settings-alert-list">
                       {health.alerts.map((alert, index) => (
@@ -6495,17 +6495,17 @@ function SettingsModal({ onClose, runAction }) {
                 </div>
               </>
             ) : (
-              <div className="soft-box">系统健康状态暂不可用，可稍后刷新重试。</div>
+              <div className="soft-box">System health is unavailable. Refresh and try again.</div>
             )}
           </section>
 
           <div className="modal-footer">
             <button className="ghost-button" type="button" onClick={onClose}>
-              关闭
+              Close
             </button>
             <button className="primary-button compact" type="submit" disabled={saving}>
               {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-              保存
+              Save
             </button>
           </div>
         </form>

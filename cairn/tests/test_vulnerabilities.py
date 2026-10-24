@@ -537,16 +537,16 @@ def test_export_markdown_content_and_scope(client, populated):
     assert "text/markdown" in resp.headers["content-type"]
     assert "p1.md" in resp.headers["content-disposition"]
     text = resp.text
-    assert text.startswith("# Alpha - 渗透测试漏洞报告")
-    assert "## 报告概览" in text
-    assert "## 漏洞清单" in text
-    assert "## 项目：Alpha（`p1`）" in text
-    assert "#### 漏洞概述" in text
-    assert "#### 漏洞证明" in text
-    assert "#### 影响结论" in text
-    assert "#### 成因分析" in text
-    assert "#### 修复建议" in text
-    assert "未记录真实请求/响应数据包。" in text
+    assert text.startswith("# Alpha - Penetration Test Report")
+    assert "## Overview" in text
+    assert "## Findings" in text
+    assert "## Project: Alpha (`p1`)" in text
+    assert "#### Summary" in text
+    assert "#### Proof" in text
+    assert "#### Impact" in text
+    assert "#### Root cause" in text
+    assert "#### Remediation" in text
+    assert "No raw request/response packet was recorded." in text
     assert "Beta" not in text
 
 
@@ -576,10 +576,10 @@ def test_vulnerability_report_endpoint_returns_structured_template_report(client
     body = resp.json()
     assert body["composer_source"] == "template"
     assert body["project_id"] == "p1"
-    assert body["vulnerability_type"] == "SQL 注入"
+    assert body["vulnerability_type"] == "SQL injection"
     assert body["attack_surface"]
-    assert any(point["label"] == "命中接口" for point in body["proof_points"])
-    assert "关键输入" in body["vulnerability_proof"] or "关键参数" in body["vulnerability_proof"]
+    assert any(point["label"] == "Endpoint" for point in body["proof_points"])
+    assert "Key parameters" in body["vulnerability_proof"]
     assert body["remediation"]
 
 
@@ -858,7 +858,7 @@ def test_report_template_prefers_enrichment_and_skips_local_paths(client, temp_d
     body = resp.json()
     assert body["composer_source"] == "template"
     # Enrichment location leads the attack surface.
-    assert body["attack_surface"][0].startswith("位置：http://10.20.30.40:8088/")
+    assert body["attack_surface"][0].startswith("Location: http://10.20.30.40:8088/")
     # Local filesystem paths never appear as attack-surface endpoints.
     assert all("poc.py" not in item for item in body["attack_surface"])
     assert all("poc.py" not in (p["content"]) for p in body["proof_points"])

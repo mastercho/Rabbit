@@ -35,13 +35,13 @@ def list_templates() -> list[dict]:
 @router.post("")
 def upload_template(payload: TemplateUpload) -> dict:
     if not payload.filename.lower().endswith(".docx"):
-        raise HTTPException(422, "只支持 DOCX 模板")
+        raise HTTPException(422, "Only DOCX templates are supported")
     try:
         content = base64.b64decode(payload.content_base64, validate=True)
     except Exception as exc:
-        raise HTTPException(422, "模板内容不是有效的 Base64") from exc
+        raise HTTPException(422, "Template content is not valid Base64") from exc
     if not content.startswith(b"PK") or len(content) > 15 * 1024 * 1024:
-        raise HTTPException(422, "DOCX 模板无效或超过 15MB")
+        raise HTTPException(422, "The DOCX template is invalid or larger than 15MB")
     try:
         analysis = inspect_template(content)
     except Exception as exc:
@@ -62,7 +62,7 @@ def activate_template(template_id: str) -> dict:
     with get_conn() as conn:
         found = conn.execute("SELECT id FROM report_templates WHERE id = ?", (template_id,)).fetchone()
         if not found:
-            raise HTTPException(404, "报告模板不存在")
+            raise HTTPException(404, "Report template not found")
         conn.execute("UPDATE report_templates SET is_active = CASE WHEN id = ? THEN 1 ELSE 0 END", (template_id,))
     return {"status": "active", "id": template_id}
 
@@ -82,9 +82,9 @@ def export_from_template(template_id: str, project_id: str = Query(...)) -> Resp
         ).fetchone()
         project = conn.execute("SELECT id, title FROM projects WHERE id = ?", (project_id,)).fetchone()
     if not template_row:
-        raise HTTPException(404, "报告模板不存在")
+        raise HTTPException(404, "Report template not found")
     if not project:
-        raise HTTPException(404, "项目不存在")
+        raise HTTPException(404, "Project not found")
     findings = _query_filtered_vulnerabilities(None, project_id, status="confirmed")
     finding_payloads = []
     with get_conn() as conn:
@@ -110,7 +110,7 @@ def export_from_template(template_id: str, project_id: str = Query(...)) -> Resp
         )
     except Exception as exc:
         raise HTTPException(502, str(exc)) from exc
-    filename = f"{project['title']}-渗透测试报告.docx"
+    filename = f"{project['title']}-penetration-test-report.docx"
     return Response(
         body,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
